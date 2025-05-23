@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitae - Leave Your Legacy</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Navigation -->
+        <nav class="nav">
+            <div class="nav-brand">
+                <h1 class="logo">vitae</h1>
+                <span class="tagline">leave your legacy</span>
+            </div>
+            <div class="nav-links">
+                <a href="#about" class="nav-link">About</a>
+                <a href="#how-it-works" class="nav-link">How It Works</a>
+                <a href="#contact" class="nav-link">Contact</a>
+            </div>
+        </nav>
+
+        <!-- Hero Section -->
+        <section class="hero">
+            <div class="hero-content">
+                <div class="hero-text">
+                    <h2 class="hero-title">Your Story Deserves to Be Told</h2>
+                    <p class="hero-subtitle">
+                        Preserve your life's most precious moments through guided storytelling. 
+                        Connect with loved ones and share your legacy for generations to come.
+                    </p>
+                    <div class="hero-buttons">
+                        <button class="btn btn-primary">Start Your Story</button>
+                        <button class="btn btn-secondary">Learn More</button>
+                    </div>
+                </div>
+                <div class="hero-visual">
+                    <!-- Vector Art SVG -->
+                    <svg viewBox="0 0 400 300" class="hero-svg">
+                        <!-- Background circles -->
+                        <circle cx="320" cy="80" r="60" fill="#E8D5F2" opacity="0.3"/>
+                        <circle cx="80" cy="220" r="40" fill="#D4C5E8" opacity="0.4"/>
+                        
+                        <!-- Main illustration -->
+                        <g class="storyteller">
+                            <!-- Chair -->
+                            <rect x="150" y="180" width="100" height="80" rx="8" fill="#C8B5DB" opacity="0.6"/>
+                            <rect x="140" y="170" width="20" height="90" rx="4" fill="#B8A5CB"/>
+                            <rect x="240" y="170" width="20" height="90" rx="4" fill="#B8A5CB"/>
+                            
+                            <!-- Person -->
+                            <circle cx="200" cy="140" r="25" fill="#F4E8F7"/>
+                            <rect x="180" y="160" width="40" height="50" rx="20" fill="#E8D5F2"/>
+                            
+                            <!-- Arms -->
+                            <ellipse cx="165" cy="175" rx="8" ry="20" fill="#F4E8F7"/>
+                            <ellipse cx="235" cy="175" rx="8" ry="20" fill="#F4E8F7"/>
+                            
+                            <!-- Microphone -->
+                            <rect x="245" y="165" width="4" height="20" fill="#9B7EAD"/>
+                            <circle cx="247" cy="160" r="6" fill="#8B6E9D"/>
+                        </g>
+                        
+                        <!-- Sound waves -->
+                        <g class="sound-waves">
+                            <path d="M 270 150 Q 290 140 310 150" stroke="#B8A5CB" stroke-width="2" fill="none" opacity="0.7"/>
+                            <path d="M 270 160 Q 295 150 320 160" stroke="#B8A5CB" stroke-width="2" fill="none" opacity="0.5"/>
+                            <path d="M 270 170 Q 300 160 330 170" stroke="#B8A5CB" stroke-width="2" fill="none" opacity="0.3"/>
+                        </g>
+                        
+                        <!-- Floating memories -->
+                        <g class="memories">
+                            <circle cx="100" cy="100" r="3" fill="#D4C5E8"/>
+                            <circle cx="320" cy="200" r="2" fill="#E8D5F2"/>
+                            <circle cx="60" cy="160" r="2.5" fill="#C8B5DB"/>
+                            <circle cx="340" cy="120" r="2" fill="#F4E8F7"/>
+                        </g>
+                        
+                        <!-- Heart symbol -->
+                        <path d="M 350 250 C 350 245, 355 240, 360 240 C 365 240, 370 245, 370 250 C 370 255, 360 265, 360 265 C 360 265, 350 255, 350 250 Z" fill="#D4C5E8"/>
+                    </svg>
+                </div>
+            </div>
+        </section>
+
+        <!-- Features Section -->
+        <section class="features" id="about">
+            <div class="features-header">
+                <h3 class="section-title">How Vitae Works</h3>
+                <p class="section-subtitle">Three simple steps to preserve your legacy</p>
+            </div>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 60 60" class="icon-svg">
+                            <circle cx="30" cy="30" r="25" fill="#E8D5F2" opacity="0.3"/>
+                            <path d="M 20 25 L 40 25 L 40 35 L 20 35 Z" fill="#9B7EAD"/>
+                            <circle cx="25" cy="30" r="2" fill="#F4E8F7"/>
+                            <circle cx="35" cy="30" r="2" fill="#F4E8F7"/>
+                        </svg>
+                    </div>
+                    <h4 class="feature-title">Guided Interview</h4>
+                    <p class="feature-description">
+                        Our AI-assisted process guides you through meaningful questions about your life experiences.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 60 60" class="icon-svg">
+                            <circle cx="30" cy="30" r="25" fill="#D4C5E8" opacity="0.3"/>
+                            <rect x="20" y="20" width="20" height="20" rx="3" fill="#9B7EAD"/>
+                            <circle cx="30" cy="30" r="3" fill="#F4E8F7"/>
+                        </svg>
+                    </div>
+                    <h4 class="feature-title">Professional Recording</h4>
+                    <p class="feature-description">
+                        Choose between in-person white-glove service or virtual recording sessions.
+                    </p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">
+                        <svg viewBox="0 0 60 60" class="icon-svg">
+                            <circle cx="30" cy="30" r="25" fill="#C8B5DB" opacity="0.3"/>
+                            <path d="M 25 20 L 35 20 L 40 30 L 35 40 L 25 40 L 20 30 Z" fill="#9B7EAD"/>
+                            <circle cx="30" cy="30" r="4" fill="#F4E8F7"/>
+                        </svg>
+                    </div>
+                    <h4 class="feature-title">Share Your Legacy</h4>
+                    <p class="feature-description">
+                        Your story is beautifully edited and packaged for sharing with family and future generations.
+                    </p>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta">
+            <div class="cta-content">
+                <h3 class="cta-title">Ready to Share Your Story?</h3>
+                <p class="cta-subtitle">
+                    Join thousands who have already preserved their legacy with Vitae
+                </p>
+                <button class="btn btn-primary btn-large">Get Started Today</button>
+                <p class="cta-note">Coming soon - Join our waitlist to be notified when we launch</p>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <h4 class="footer-logo">vitae</h4>
+                    <p class="footer-tagline">leave your legacy</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#" class="footer-link">Privacy Policy</a>
+                    <a href="#" class="footer-link">Terms of Service</a>
+                    <a href="#" class="footer-link">Contact Us</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Vitae. All rights reserved.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
