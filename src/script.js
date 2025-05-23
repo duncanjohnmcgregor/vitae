@@ -1,4 +1,4 @@
-// Modern JavaScript for Vitae Landing Page
+﻿// Modern JavaScript for Vitae Landing Page
 document.addEventListener('DOMContentLoaded', function() {
     // Initialize all interactions
     initNavigation();
@@ -252,10 +252,10 @@ function showModal(type) {
                            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; font-size: 1rem;">
                     <input type="text" placeholder="Your name" required 
                            style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; font-size: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="width: 100%;">Join Waitlist</button>
                 </form>
             `,
             actions: [
-                { text: 'Join Waitlist', primary: true, action: submitWaitlist },
                 { text: 'Maybe Later', primary: false, action: closeModal }
             ]
         },
@@ -327,6 +327,17 @@ function showModal(type) {
         button.addEventListener('click', action.action);
     });
 
+    // Add form submit listener
+    const form = modalContent.querySelector('#waitlistForm');
+    if (form) {
+        console.log('Adding form submit listener');
+        form.addEventListener('submit', (e) => {
+            console.log('Form submit event triggered');
+            e.preventDefault();
+            submitWaitlist();
+        });
+    }
+
     overlay.addEventListener('click', (e) => {
         if (e.target === overlay) closeModal();
     });
@@ -351,12 +362,18 @@ function showModal(type) {
 }
 
 function submitWaitlist() {
+    console.log('submitWaitlist called');
     const form = document.getElementById('waitlistForm');
-    if (!form) return;
+    if (!form) {
+        console.error('Form not found');
+        return;
+    }
+    console.log('Form found');
 
     const email = form.querySelector('input[type="email"]').value;
     const name = form.querySelector('input[type="text"]').value;
-
+    console.log('Form values:', { email, name });
+    
     // Show loading state
     const submitButton = form.querySelector('button[type="submit"]');
     const originalText = submitButton.textContent;
@@ -364,9 +381,9 @@ function submitWaitlist() {
     submitButton.textContent = 'Submitting...';
 
     // Get the Cloud Function URL from the environment
-    const functionUrl = window.location.hostname === 'localhost' 
-        ? 'http://localhost:8080'  // Local development
-        : 'https://YOUR_REGION-YOUR_PROJECT_ID.cloudfunctions.net/waitlist-submission';  // Production
+    const functionUrl = window.location.hostname === 'localhost' ? 'http://localhost:5001/vitae-local/us-central1/handleWaitlistSubmission' : 'https://us-central1-vitae-460717.cloudfunctions.net/handleWaitlistSubmission';  // Production
+    
+    console.log('Sending request to:', functionUrl);
 
     // Submit the form
     fetch(functionUrl, {
@@ -376,8 +393,12 @@ function submitWaitlist() {
         },
         body: JSON.stringify({ email, name })
     })
-    .then(response => response.json())
+    .then(response => {
+        console.log('Response received:', response);
+        return response.json();
+    })
     .then(data => {
+        console.log('Data received:', data);
         if (data.error) {
             throw new Error(data.error);
         }
@@ -397,6 +418,7 @@ function submitWaitlist() {
         document.querySelector('.modal-actions').remove();
     })
     .catch(error => {
+        console.error('Error:', error);
         // Show error message
         const errorMessage = document.createElement('div');
         errorMessage.className = 'error-message';
@@ -526,3 +548,10 @@ const styles = `
 const styleSheet = document.createElement('style');
 styleSheet.textContent = styles;
 document.head.appendChild(styleSheet); 
+
+
+
+
+
+
+

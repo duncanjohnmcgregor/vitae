@@ -56,6 +56,7 @@ $requiredTools = @{
 
 if ($Environment -eq 'prod') {
     $requiredTools['Google Cloud SDK'] = { Test-Command 'gcloud' }
+    $requiredTools['Terraform'] = { Test-Command 'terraform' }
 }
 
 $missingTools = @()
@@ -97,7 +98,7 @@ Write-Host "Starting deployment for environment: $Environment" -ForegroundColor 
 
 if ($Environment -eq 'local') {
     Write-Host "`nSetting up local development environment..." -ForegroundColor Yellow
-    Invoke-Script -ScriptPath ".\setup-local.ps1" -ErrorMessage "Failed to set up local environment"
+    Invoke-Script -ScriptPath ".\terraform\setup-local.ps1" -ErrorMessage "Failed to set up local environment"
 }
 else {
     Write-Host "`nDeploying to production..." -ForegroundColor Yellow
@@ -112,16 +113,18 @@ else {
     $env:REGION = $Region
     
     # Run the production deployment script
-    Invoke-Script -ScriptPath ".\deploy-function.ps1" -ErrorMessage "Failed to deploy to production"
+    Invoke-Script -ScriptPath ".\terraform\deploy-function.ps1" -ErrorMessage "Failed to deploy to production"
     
     # Deploy the website using Terraform
     Write-Host "`nDeploying website infrastructure..." -ForegroundColor Yellow
     try {
+        Set-Location -Path ".\terraform"
         terraform init
         if ($LASTEXITCODE -ne 0) { throw "Terraform init failed" }
         
         terraform apply -auto-approve
         if ($LASTEXITCODE -ne 0) { throw "Terraform apply failed" }
+        Set-Location -Path ".."
     }
     catch {
         Write-Host "Error: Failed to deploy website infrastructure"

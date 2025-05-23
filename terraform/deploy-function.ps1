@@ -33,31 +33,31 @@ gcloud config set functions/region $region
 
 # Install dependencies for the Cloud Function
 Write-Host "Installing Cloud Function dependencies..."
-Set-Location -Path "waitlist-function"
+Set-Location -Path "functions"
 npm install
 
 # Create a zip file for the Cloud Function
 Write-Host "Creating Cloud Function zip file..."
-Compress-Archive -Path * -DestinationPath "../waitlist-function.zip" -Force
+Compress-Archive -Path * -DestinationPath "../functions.zip" -Force
 Set-Location -Path ".."
 
 # Deploy the Cloud Function
 Write-Host "Deploying Cloud Function..."
-gcloud functions deploy waitlist-submission `
+gcloud functions deploy handleWaitlistSubmission `
     --runtime nodejs18 `
     --trigger-http `
     --allow-unauthenticated `
-    --source waitlist-function `
+    --source functions `
     --entry-point handleWaitlistSubmission `
     --set-env-vars FIRESTORE_COLLECTION=waitlist
 
 # Get the deployed function URL
-$functionUrl = gcloud functions describe waitlist-submission --format="value(httpsTrigger.url)"
+$functionUrl = gcloud functions describe handleWaitlistSubmission --format="value(httpsTrigger.url)"
 
 # Update the Cloud Function URL in script.js
 $scriptJsPath = "../src/script.js"
 $scriptJsContent = Get-Content -Path $scriptJsPath -Raw
-$updatedContent = $scriptJsContent -replace "https://YOUR_REGION-YOUR_PROJECT_ID.cloudfunctions.net/waitlist-submission", $functionUrl
+$updatedContent = $scriptJsContent -replace "https://YOUR_REGION-YOUR_PROJECT_ID.cloudfunctions.net/handleWaitlistSubmission", $functionUrl
 $updatedContent | Set-Content -Path $scriptJsPath -Encoding UTF8
 
 Write-Host "`nCloud Function deployed successfully!"
