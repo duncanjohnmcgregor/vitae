@@ -130,17 +130,49 @@ Set-Location -Path ".."
 
 # Start the Firebase emulators
 Write-Host "Starting Firebase emulators..."
-Start-Process -FilePath "firebase" -ArgumentList "emulators:start" -NoNewWindow
-
-# Wait for emulators to start
-Write-Host "Waiting for emulators to start..."
-Start-Sleep -Seconds 5
+try {
+    # Kill any existing emulator processes
+    Get-Process -Name "firebase" -ErrorAction SilentlyContinue | Stop-Process -Force
+    
+    # Start emulators in a new window
+    $firebaseCmd = "firebase emulators:start"
+    Start-Process powershell -ArgumentList "-NoExit", "-Command", $firebaseCmd
+    
+    # Wait for emulators to start
+    Write-Host "Waiting for emulators to start..."
+    Start-Sleep -Seconds 10
+    
+    # Check if emulators are running
+    $emulatorPorts = @(4000, 5001, 8080)
+    $allRunning = $true
+    
+    foreach ($port in $emulatorPorts) {
+        $connection = Test-NetConnection -ComputerName localhost -Port $port -WarningAction SilentlyContinue
+        if (-not $connection.TcpTestSucceeded) {
+            $allRunning = $false
+            Write-Warning "Emulator on port $port is not responding"
+        }
+    }
+    
+    if (-not $allRunning) {
+        throw "One or more emulators failed to start"
+    }
+}
+catch {
+    Write-Error "Failed to start Firebase emulators: $_"
+    exit 1
+}
 
 # Update the Cloud Function URL in script.js
 $scriptJsPath = "..\src\script.js"
-$scriptJsContent = Get-Content -Path $scriptJsPath -Raw
-$updatedContent = $scriptJsContent -replace "http://localhost:8080", "http://localhost:5001/vitae-local/us-central1/waitlist-submission"
-$updatedContent | Set-Content -Path $scriptJsPath -Encoding UTF8
+if (Test-Path $scriptJsPath) {
+    $scriptJsContent = Get-Content -Path $scriptJsPath -Raw
+    $updatedContent = $scriptJsContent -replace "http://localhost:8080", "http://localhost:5001/vitae-local/us-central1/waitlist-submission"
+    $updatedContent | Set-Content -Path $scriptJsPath -Encoding UTF8
+}
+else {
+    Write-Warning "script.js not found at $scriptJsPath"
+}
 
 Write-Host "`nLocal development environment is ready!"
 Write-Host "Firebase Emulator UI: http://localhost:4000"
