@@ -1,227 +1,528 @@
-// Smooth scrolling for navigation links
+// Modern JavaScript for Vitae Landing Page
 document.addEventListener('DOMContentLoaded', function() {
-    // Smooth scrolling for anchor links
+    // Initialize all interactions
+    initNavigation();
+    initButtons();
+    initAnimations();
+    initScrollEffects();
+});
+
+// Navigation functionality
+function initNavigation() {
     const navLinks = document.querySelectorAll('a[href^="#"]');
     
     navLinks.forEach(link => {
         link.addEventListener('click', function(e) {
             e.preventDefault();
-            
             const targetId = this.getAttribute('href');
             const targetSection = document.querySelector(targetId);
             
             if (targetSection) {
-                targetSection.scrollIntoView({
-                    behavior: 'smooth',
-                    block: 'start'
+                const headerOffset = 80;
+                const elementPosition = targetSection.getBoundingClientRect().top;
+                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+
+                window.scrollTo({
+                    top: offsetPosition,
+                    behavior: 'smooth'
                 });
             }
         });
     });
 
-    // Add click handlers for buttons (placeholder functionality)
+    // Add scroll effect to navigation
+    let lastScrollTop = 0;
+    const nav = document.querySelector('.nav');
+    
+    window.addEventListener('scroll', () => {
+        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+        
+        if (scrollTop > lastScrollTop && scrollTop > 100) {
+            nav.style.transform = 'translateY(-100%)';
+        } else {
+            nav.style.transform = 'translateY(0)';
+        }
+        
+        lastScrollTop = scrollTop;
+    });
+}
+
+// Button interactions
+function initButtons() {
     const buttons = document.querySelectorAll('.btn');
     
     buttons.forEach(button => {
         button.addEventListener('click', function(e) {
             // Add ripple effect
-            const ripple = document.createElement('span');
-            const rect = this.getBoundingClientRect();
-            const size = Math.max(rect.width, rect.height);
-            const x = e.clientX - rect.left - size / 2;
-            const y = e.clientY - rect.top - size / 2;
+            createRipple(e, this);
             
-            ripple.style.width = ripple.style.height = size + 'px';
-            ripple.style.left = x + 'px';
-            ripple.style.top = y + 'px';
-            ripple.classList.add('ripple');
+            // Handle different button actions
+            const buttonText = this.textContent.toLowerCase();
             
-            this.appendChild(ripple);
-            
-            // Remove ripple after animation
-            setTimeout(() => {
-                ripple.remove();
-            }, 600);
-            
-            // Placeholder functionality
-            if (this.textContent.includes('Start Your Story') || this.textContent.includes('Get Started Today')) {
-                showComingSoonModal();
-            } else if (this.textContent.includes('Learn More')) {
-                document.querySelector('#about').scrollIntoView({
+            if (buttonText.includes('start your story') || buttonText.includes('get started')) {
+                showModal('waitlist');
+            } else if (buttonText.includes('watch demo')) {
+                showModal('demo');
+            } else if (buttonText.includes('schedule a call')) {
+                showModal('schedule');
+            } else if (buttonText.includes('learn more')) {
+                document.querySelector('#features')?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
                 });
             }
         });
     });
+}
 
-    // Add scroll-triggered animations
+// Create ripple effect
+function createRipple(event, element) {
+    const circle = document.createElement('span');
+    const diameter = Math.max(element.clientWidth, element.clientHeight);
+    const radius = diameter / 2;
+    
+    circle.style.width = circle.style.height = `${diameter}px`;
+    circle.style.left = `${event.clientX - element.offsetLeft - radius}px`;
+    circle.style.top = `${event.clientY - element.offsetTop - radius}px`;
+    circle.classList.add('ripple');
+    
+    const ripple = element.getElementsByClassName('ripple')[0];
+    if (ripple) {
+        ripple.remove();
+    }
+    
+    element.appendChild(circle);
+    
+    setTimeout(() => {
+        circle.remove();
+    }, 600);
+}
+
+// Animation system
+function initAnimations() {
+    // Animate hero cards
+    animateHeroCards();
+    
+    // Animate wave bars
+    animateWaveBars();
+    
+    // Animate floating elements
+    animateFloatingElements();
+
+    // Initialize testimonial carousel
+    initTestimonialCarousel();
+}
+
+function animateHeroCards() {
+    const cards = document.querySelectorAll('.story-card');
+    cards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.2}s`;
+        card.classList.add('fade-in-up');
+    });
+}
+
+function animateWaveBars() {
+    const waveBars = document.querySelectorAll('.wave-bar');
+    waveBars.forEach((bar, index) => {
+        bar.style.animationDelay = `${index * 0.1}s`;
+    });
+}
+
+function animateFloatingElements() {
+    const elements = document.querySelectorAll('.floating-element');
+    elements.forEach((element, index) => {
+        element.style.animationDelay = `${index * 0.5}s`;
+    });
+}
+
+// Testimonial carousel functionality
+function initTestimonialCarousel() {
+    const testimonialsGrid = document.querySelector('.testimonials-grid');
+    if (!testimonialsGrid) return;
+
+    const cards = testimonialsGrid.querySelectorAll('.testimonial-card');
+    if (cards.length <= 1) return;
+
+    // Add carousel controls
+    const controls = document.createElement('div');
+    controls.className = 'carousel-controls';
+    controls.innerHTML = `
+        <button class="carousel-prev" aria-label="Previous testimonial">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+        <div class="carousel-dots"></div>
+        <button class="carousel-next" aria-label="Next testimonial">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+        </button>
+    `;
+    testimonialsGrid.parentNode.insertBefore(controls, testimonialsGrid.nextSibling);
+
+    // Add dots
+    const dotsContainer = controls.querySelector('.carousel-dots');
+    cards.forEach((_, index) => {
+        const dot = document.createElement('button');
+        dot.className = 'carousel-dot';
+        dot.setAttribute('aria-label', `Go to testimonial ${index + 1}`);
+        dotsContainer.appendChild(dot);
+    });
+
+    let currentIndex = 0;
+    const dots = dotsContainer.querySelectorAll('.carousel-dot');
+    const prevButton = controls.querySelector('.carousel-prev');
+    const nextButton = controls.querySelector('.carousel-next');
+
+    function updateCarousel() {
+        cards.forEach((card, index) => {
+            card.style.transform = `translateX(${(index - currentIndex) * 100}%)`;
+            card.style.opacity = index === currentIndex ? '1' : '0.5';
+        });
+        dots.forEach((dot, index) => {
+            dot.classList.toggle('active', index === currentIndex);
+        });
+    }
+
+    function goToSlide(index) {
+        currentIndex = (index + cards.length) % cards.length;
+        updateCarousel();
+    }
+
+    // Add event listeners
+    prevButton.addEventListener('click', () => goToSlide(currentIndex - 1));
+    nextButton.addEventListener('click', () => goToSlide(currentIndex + 1));
+    dots.forEach((dot, index) => {
+        dot.addEventListener('click', () => goToSlide(index));
+    });
+
+    // Auto-advance carousel
+    let autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
+
+    // Pause autoplay on hover
+    testimonialsGrid.addEventListener('mouseenter', () => clearInterval(autoplayInterval));
+    testimonialsGrid.addEventListener('mouseleave', () => {
+        autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
+    });
+
+    // Initialize carousel
+    updateCarousel();
+}
+
+// Scroll-triggered animations
+function initScrollEffects() {
     const observerOptions = {
         threshold: 0.1,
-        rootMargin: '0px 0px -50px 0px'
+        rootMargin: '0px 0px -100px 0px'
     };
 
-    const observer = new IntersectionObserver(function(entries) {
+    const observer = new IntersectionObserver((entries) => {
         entries.forEach(entry => {
             if (entry.isIntersecting) {
-                entry.target.style.opacity = '1';
-                entry.target.style.transform = 'translateY(0)';
+                entry.target.classList.add('animate-in');
             }
         });
     }, observerOptions);
 
-    // Observe feature cards for animation
-    const featureCards = document.querySelectorAll('.feature-card');
-    featureCards.forEach(card => {
-        card.style.opacity = '0';
-        card.style.transform = 'translateY(30px)';
-        card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-        observer.observe(card);
+    // Elements to animate on scroll
+    const animatedElements = document.querySelectorAll(
+        '.feature-card, .step, .testimonial-card, .section-header'
+    );
+    
+    animatedElements.forEach((element, index) => {
+        element.style.opacity = '0';
+        element.style.transform = 'translateY(30px)';
+        element.style.transition = `opacity 0.6s ease ${index * 0.1}s, transform 0.6s ease ${index * 0.1}s`;
+        observer.observe(element);
+    });
+}
+
+// Modal system
+function showModal(type) {
+    const modals = {
+        waitlist: {
+            title: '🚀 Join the Waitlist',
+            content: `
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+                    Be among the first to preserve your legacy with Vitae. Get early access and special launch pricing.
+                </p>
+                <form id="waitlistForm" style="margin-bottom: 1.5rem;">
+                    <input type="email" placeholder="Enter your email" required 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; font-size: 1rem;">
+                    <input type="text" placeholder="Your name" required 
+                           style="width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: 0.5rem; margin-bottom: 1rem; font-size: 1rem;">
+                </form>
+            `,
+            actions: [
+                { text: 'Join Waitlist', primary: true, action: submitWaitlist },
+                { text: 'Maybe Later', primary: false, action: closeModal }
+            ]
+        },
+        demo: {
+            title: '🎥 Watch Demo',
+            content: `
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+                    See how Vitae helps families preserve their most precious stories through guided storytelling.
+                </p>
+                <div style="background: var(--surface); padding: 3rem; border-radius: 1rem; margin-bottom: 1.5rem; text-align: center;">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📹</div>
+                    <p style="color: var(--text-tertiary);">Demo video coming soon!</p>
+                </div>
+            `,
+            actions: [
+                { text: 'Notify Me', primary: true, action: () => showModal('waitlist') },
+                { text: 'Close', primary: false, action: closeModal }
+            ]
+        },
+        schedule: {
+            title: '📞 Schedule a Call',
+            content: `
+                <p style="margin-bottom: 1.5rem; color: var(--text-secondary); line-height: 1.6;">
+                    Talk to our team about how Vitae can help preserve your family's legacy.
+                </p>
+                <div style="background: var(--surface); padding: 2rem; border-radius: 1rem; margin-bottom: 1.5rem;">
+                    <h4 style="margin-bottom: 1rem; color: var(--text-primary);">What we'll cover:</h4>
+                    <ul style="text-align: left; color: var(--text-secondary); line-height: 1.6;">
+                        <li>Your storytelling goals</li>
+                        <li>Our process and timeline</li>
+                        <li>Pricing and packages</li>
+                        <li>Next steps</li>
+                    </ul>
+                </div>
+            `,
+            actions: [
+                { text: 'Book a Call', primary: true, action: () => alert('Booking system coming soon!') },
+                { text: 'Not Now', primary: false, action: closeModal }
+            ]
+        }
+    };
+
+    const modal = modals[type];
+    if (!modal) return;
+
+    const overlay = document.createElement('div');
+    overlay.className = 'modal-overlay';
+    
+    const modalContent = document.createElement('div');
+    modalContent.className = 'modal-content';
+    modalContent.innerHTML = `
+        <h3 class="modal-title">${modal.title}</h3>
+        <div class="modal-body">${modal.content}</div>
+        <div class="modal-actions">
+            ${modal.actions.map(action => 
+                `<button class="btn ${action.primary ? 'btn-primary' : 'btn-secondary'}" data-action="${action.text}">
+                    ${action.text}
+                </button>`
+            ).join('')}
+        </div>
+    `;
+
+    overlay.appendChild(modalContent);
+    document.body.appendChild(overlay);
+
+    // Add event listeners
+    modal.actions.forEach(action => {
+        const button = modalContent.querySelector(`[data-action="${action.text}"]`);
+        button.addEventListener('click', action.action);
     });
 
-    // Add floating animation to SVG elements
-    const memories = document.querySelector('.memories');
-    if (memories) {
-        memories.style.animationDelay = '1s';
+    overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) closeModal();
+    });
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') closeModal();
+    });
+
+    // Animate in
+    requestAnimationFrame(() => {
+        overlay.classList.add('modal-open');
+    });
+
+    function closeModal() {
+        overlay.classList.remove('modal-open');
+        setTimeout(() => {
+            document.body.removeChild(overlay);
+        }, 300);
     }
 
-    const soundWaves = document.querySelector('.sound-waves');
-    if (soundWaves) {
-        soundWaves.style.animationDelay = '0.5s';
-    }
-});
+    window.closeModal = closeModal;
+}
 
-// Coming Soon Modal functionality
-function showComingSoonModal() {
-    // Create modal overlay
-    const overlay = document.createElement('div');
-    overlay.style.cssText = `
+function submitWaitlist() {
+    const form = document.getElementById('waitlistForm');
+    if (!form) return;
+
+    const email = form.querySelector('input[type="email"]').value;
+    const name = form.querySelector('input[type="text"]').value;
+
+    // Show loading state
+    const submitButton = form.querySelector('button[type="submit"]');
+    const originalText = submitButton.textContent;
+    submitButton.disabled = true;
+    submitButton.textContent = 'Submitting...';
+
+    // Get the Cloud Function URL from the environment
+    const functionUrl = window.location.hostname === 'localhost' 
+        ? 'http://localhost:8080'  // Local development
+        : 'https://YOUR_REGION-YOUR_PROJECT_ID.cloudfunctions.net/waitlist-submission';  // Production
+
+    // Submit the form
+    fetch(functionUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, name })
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.error) {
+            throw new Error(data.error);
+        }
+        // Show success message
+        const modalBody = document.querySelector('.modal-body');
+        modalBody.innerHTML = `
+            <div style="text-align: center; padding: 2rem;">
+                <div style="font-size: 3rem; margin-bottom: 1rem;">🎉</div>
+                <h4 style="margin-bottom: 1rem; color: var(--text-primary);">Welcome to the waitlist!</h4>
+                <p style="color: var(--text-secondary); line-height: 1.6;">
+                    We'll be in touch soon with updates about your early access.
+                </p>
+            </div>
+        `;
+        // Remove the form and buttons
+        form.remove();
+        document.querySelector('.modal-actions').remove();
+    })
+    .catch(error => {
+        // Show error message
+        const errorMessage = document.createElement('div');
+        errorMessage.className = 'error-message';
+        errorMessage.textContent = error.message || 'Something went wrong. Please try again.';
+        errorMessage.style.color = 'var(--error)';
+        errorMessage.style.marginTop = '1rem';
+        form.appendChild(errorMessage);
+        
+        // Reset button state
+        submitButton.disabled = false;
+        submitButton.textContent = originalText;
+    });
+}
+
+// Add modern CSS
+const styles = `
+    .ripple {
+        position: absolute;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.6);
+        transform: scale(0);
+        animation: ripple 0.6s linear;
+        pointer-events: none;
+    }
+
+    @keyframes ripple {
+        to {
+            transform: scale(4);
+            opacity: 0;
+        }
+    }
+
+    .modal-overlay {
         position: fixed;
         top: 0;
         left: 0;
         width: 100%;
         height: 100%;
-        background: rgba(155, 126, 173, 0.8);
+        background: rgba(0, 0, 0, 0.5);
         display: flex;
         justify-content: center;
         align-items: center;
         z-index: 1000;
         opacity: 0;
         transition: opacity 0.3s ease;
-    `;
+    }
 
-    // Create modal content
-    const modal = document.createElement('div');
-    modal.style.cssText = `
+    .modal-overlay.modal-open {
+        opacity: 1;
+    }
+
+    .modal-content {
         background: white;
-        padding: 3rem;
-        border-radius: 1.5rem;
-        text-align: center;
+        padding: 2rem;
+        border-radius: 1rem;
         max-width: 500px;
-        margin: 1rem;
-        box-shadow: 0 20px 25px -5px rgba(155, 126, 173, 0.1), 0 10px 10px -5px rgba(155, 126, 173, 0.04);
-        transform: scale(0.9);
+        width: 90%;
+        max-height: 90vh;
+        overflow-y: auto;
+        transform: scale(0.9) translateY(20px);
         transition: transform 0.3s ease;
-    `;
-
-    modal.innerHTML = `
-        <h3 style="color: #4A3B5C; margin-bottom: 1rem; font-size: 1.5rem; font-weight: 600;">Coming Soon!</h3>
-        <p style="color: #6B5B7A; margin-bottom: 2rem; line-height: 1.6;">
-            Vitae is currently in development. Join our waitlist to be the first to know when we launch and start preserving your legacy.
-        </p>
-        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
-            <button id="joinWaitlist" style="
-                background: linear-gradient(135deg, #9B7EAD 0%, #B8A5CB 100%);
-                color: white;
-                border: none;
-                padding: 0.75rem 1.5rem;
-                border-radius: 0.75rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: transform 0.3s ease;
-            ">Join Waitlist</button>
-            <button id="closeModal" style="
-                background: white;
-                color: #9B7EAD;
-                border: 2px solid #C8B5DB;
-                padding: 0.75rem 1.5rem;
-                border-radius: 0.75rem;
-                font-weight: 600;
-                cursor: pointer;
-                transition: all 0.3s ease;
-            ">Close</button>
-        </div>
-    `;
-
-    overlay.appendChild(modal);
-    document.body.appendChild(overlay);
-
-    // Animate in
-    setTimeout(() => {
-        overlay.style.opacity = '1';
-        modal.style.transform = 'scale(1)';
-    }, 10);
-
-    // Add event listeners
-    document.getElementById('closeModal').addEventListener('click', closeModal);
-    document.getElementById('joinWaitlist').addEventListener('click', function() {
-        alert('Thank you for your interest! We\'ll notify you when Vitae launches.');
-        closeModal();
-    });
-
-    overlay.addEventListener('click', function(e) {
-        if (e.target === overlay) {
-            closeModal();
-        }
-    });
-
-    function closeModal() {
-        overlay.style.opacity = '0';
-        modal.style.transform = 'scale(0.9)';
-        setTimeout(() => {
-            document.body.removeChild(overlay);
-        }, 300);
+        box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     }
 
-    // Close on escape key
-    document.addEventListener('keydown', function(e) {
-        if (e.key === 'Escape') {
-            closeModal();
-        }
-    });
-}
+    .modal-open .modal-content {
+        transform: scale(1) translateY(0);
+    }
 
-// Add CSS for ripple effect
-const style = document.createElement('style');
-style.textContent = `
-    .btn {
-        position: relative;
-        overflow: hidden;
+    .modal-title {
+        font-size: 1.5rem;
+        font-weight: 700;
+        margin-bottom: 1rem;
+        color: var(--text-primary);
     }
-    
-    .ripple {
-        position: absolute;
-        border-radius: 50%;
-        background: rgba(255, 255, 255, 0.6);
-        transform: scale(0);
-        animation: ripple-animation 0.6s linear;
-        pointer-events: none;
+
+    .modal-body {
+        margin-bottom: 1.5rem;
     }
-    
-    @keyframes ripple-animation {
-        to {
-            transform: scale(4);
+
+    .modal-actions {
+        display: flex;
+        gap: 1rem;
+        justify-content: flex-end;
+        flex-wrap: wrap;
+    }
+
+    .animate-in {
+        opacity: 1 !important;
+        transform: translateY(0) !important;
+    }
+
+    .fade-in-up {
+        animation: fadeInUp 0.6s ease forwards;
+    }
+
+    @keyframes fadeInUp {
+        from {
             opacity: 0;
+            transform: translateY(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
         }
     }
-    
-    .btn:hover {
-        transform: translateY(-2px);
+
+    .nav {
+        transition: transform 0.3s ease;
     }
-    
-    .btn-secondary:hover {
-        background: #E8D5F2;
-        border-color: #9B7EAD;
+
+    @media (max-width: 768px) {
+        .modal-content {
+            padding: 1.5rem;
+            margin: 1rem;
+        }
+        
+        .modal-actions {
+            flex-direction: column;
+        }
+        
+        .modal-actions .btn {
+            width: 100%;
+        }
     }
 `;
-document.head.appendChild(style); 
+
+const styleSheet = document.createElement('style');
+styleSheet.textContent = styles;
+document.head.appendChild(styleSheet); 

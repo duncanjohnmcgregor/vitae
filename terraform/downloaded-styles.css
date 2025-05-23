@@ -118,55 +118,11 @@ body {
     height: 70px;
 }
 
-/* Cool Wordmark Styling */
 .nav-brand .logo {
-    position: relative;
-    display: flex;
-    align-items: center;
+    font-size: 1.5rem;
+    font-weight: var(--font-weight-bold);
+    color: var(--primary);
     text-decoration: none;
-}
-
-.logo-text {
-    font-size: 1.75rem;
-    font-weight: var(--font-weight-extrabold);
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-    background-size: 200% 200%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    letter-spacing: -0.02em;
-    position: relative;
-    z-index: 2;
-    animation: gradientShift 3s ease-in-out infinite;
-    text-transform: lowercase;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-}
-
-.logo-accent {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    width: 120%;
-    height: 120%;
-    background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 50%, rgba(236, 72, 153, 0.1) 100%);
-    border-radius: 12px;
-    opacity: 0;
-    z-index: 1;
-}
-
-/* Gradient animation */
-@keyframes gradientShift {
-    0% {
-        background-position: 0% 50%;
-    }
-    50% {
-        background-position: 100% 50%;
-    }
-    100% {
-        background-position: 0% 50%;
-    }
 }
 
 .nav-menu {
@@ -568,63 +524,17 @@ body {
 
 /* Testimonials */
 .testimonials-grid {
-    position: relative;
-    overflow: hidden;
-    padding: 2rem 0;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--space-8);
 }
 
 .testimonial-card {
-    position: absolute;
-    width: 100%;
-    transition: transform 0.5s ease, opacity 0.5s ease;
-    opacity: 0.5;
-}
-
-.testimonial-card:first-child {
-    position: relative;
-}
-
-.carousel-controls {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    margin-top: 2rem;
-}
-
-.carousel-prev,
-.carousel-next {
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0.5rem;
-    color: var(--text-secondary);
-    transition: color 0.2s ease;
-}
-
-.carousel-prev:hover,
-.carousel-next:hover {
-    color: var(--text-primary);
-}
-
-.carousel-dots {
-    display: flex;
-    gap: 0.5rem;
-}
-
-.carousel-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--border);
-    border: none;
-    padding: 0;
-    cursor: pointer;
-    transition: background-color 0.2s ease;
-}
-
-.carousel-dot.active {
-    background: var(--primary);
+    background: white;
+    border-radius: var(--radius-xl);
+    padding: var(--space-8);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
 }
 
 .testimonial-content {
@@ -730,29 +640,12 @@ body {
     margin-bottom: var(--space-12);
 }
 
-/* Footer Logo Styling - matches the navigation wordmark */
 .footer-logo {
-    position: relative;
-    display: flex;
-    align-items: center;
-    margin-bottom: var(--space-2);
-}
-
-.footer-logo-text {
     font-size: 1.5rem;
-    font-weight: var(--font-weight-extrabold);
-    background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #ec4899 100%);
-    background-size: 200% 200%;
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    color: transparent;
-    letter-spacing: -0.02em;
-    position: relative;
-    z-index: 2;
-    animation: gradientShift 3s ease-in-out infinite;
-    text-transform: lowercase;
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+    font-weight: var(--font-weight-bold);
+    color: white;
+    margin-bottom: var(--space-2);
+    display: block;
 }
 
 .footer-tagline {
