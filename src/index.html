@@ -1,18 +1,24 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vitae - Your Story Deserves to Be Told</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/css/glide.core.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/css/glide.theme.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <link rel="stylesheet" href="styles.css?v=3.2">
 </head>
+
 <body>
     <!-- Navigation -->
     <nav class="nav">
         <div class="nav-container">
             <div class="nav-brand">
-                                                <div class="logo">                    <span class="logo-text">vitae</span>                </div>
+                <div class="logo"> <span class="logo-text">vitae</span> </div>
             </div>
             <div class="nav-menu">
                 <a href="#features" class="nav-link">Features</a>
@@ -34,14 +40,15 @@
                     Your story deserves to be told
                 </h1>
                 <p class="hero-subtitle">
-                    Preserve your most precious memories through guided storytelling. 
+                    Preserve your most precious memories through guided storytelling.
                     Connect with loved ones and create a lasting legacy for generations.
                 </p>
                 <div class="hero-actions">
                     <button class="btn btn-primary btn-large">
                         <span>Start your story</span>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                     </button>
                     <button class="btn btn-secondary btn-large">Watch demo</button>
@@ -56,53 +63,111 @@
                 </div>
             </div>
             <div class="hero-visual">
-                <div class="hero-cards">
-                    <div class="story-card card-1">
-                        <div class="card-header">
-                            <div class="avatar"></div>
-                            <div class="card-info">
-                                <div class="card-name">Margaret Chen</div>
-                                <div class="card-age">Age 78</div>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="waveform">
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                                <div class="wave-bar"></div>
-                            </div>
-                            <p class="story-text">"When I first came to America..."</p>
-                        </div>
-                    </div>
-                    <div class="story-card card-2">
-                        <div class="card-header">
-                            <div class="avatar avatar-2"></div>
-                            <div class="card-info">
-                                <div class="card-name">James Rodriguez</div>
-                                <div class="card-age">Age 65</div>
-                            </div>
-                        </div>
-                        <div class="card-content">
-                            <div class="progress-bar">
-                                <div class="progress-fill"></div>
-                            </div>
-                            <p class="story-text">Chapter 3: Building our family business</p>
-                        </div>
-                    </div>
-                    <div class="floating-element element-1">
-                        <span>📖</span>
-                    </div>
-                    <div class="floating-element element-2">
-                        <span>💝</span>
-                    </div>
-                    <div class="floating-element element-3">
-                        <span>🎙️</span>
-                    </div>
+                <div class="hero-cards-container glide">
+                    <div class="glide__track" data-glide-el="track">
+                        <ul class="glide__slides hero-cards">
+                            <li class="glide__slide">
+                                <div class="story-card card-1">
+                                    <div class="card-horizontal">
+                                        <div class="avatar"></div>
+                                        <div class="card-info">
+                                            <div class="card-name">Robert Rhodes</div>
+                                            <div class="card-age">Age 78</div>
+                                        </div>
+                                        <div class="waveform">
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                        </div>
+                                        <div class="audio-controls"> <button class="audio-btn play-btn"
+                                                aria-label="Play"> <svg width="16" height="16" viewBox="0 0 16 16"
+                                                    fill="none">
+                                                    <path d="M5 3L13 8L5 13V3Z" fill="currentColor" />
+                                                </svg> </button> <button class="audio-btn pause-btn" aria-label="Pause"
+                                                style="display: none;"> <svg width="16" height="16" viewBox="0 0 16 16"
+                                                    fill="none">
+                                                    <rect x="4" y="3" width="3" height="10" fill="currentColor" />
+                                                    <rect x="9" y="3" width="3" height="10" fill="currentColor" />
+                                                </svg> </button> </div>
+                                    </div>
+                                    <p class="story-text">"Growing up in small-town America..."</p>
+                                </div>
+                            </li>
+                            <li class="glide__slide">
+                                <div class="story-card card-2">
+                                    <div class="card-horizontal">
+                                        <div class="avatar avatar-2"></div>
+                                        <div class="card-info">
+                                                                                        <div class="card-name">Judith Chaplan</div>                                            <div class="card-age">Age 68</div>
+                                        </div>
+                                        <div class="waveform">
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                        </div>
+                                        <div class="audio-controls"> <button class="audio-btn play-btn"
+                                                aria-label="Play"> <svg width="16" height="16" viewBox="0 0 16 16"
+                                                    fill="none">
+                                                    <path d="M5 3L13 8L5 13V3Z" fill="currentColor" />
+                                                </svg> </button> <button class="audio-btn pause-btn" aria-label="Pause"
+                                                style="display: none;"> <svg width="16" height="16" viewBox="0 0 16 16"
+                                                    fill="none">
+                                                    <rect x="4" y="3" width="3" height="10" fill="currentColor" />
+                                                    <rect x="9" y="3" width="3" height="10" fill="currentColor" />
+                                                </svg> </button> </div>
+                                    </div>
+                                    <p class="story-text">"Raising my children during the war..."</p>
+                                </div>
+                            </li>
+                            <li class="glide__slide">
+                                <div class="story-card card-3">
+                                    <div class="card-horizontal">
+                                        <div class="avatar avatar-3"></div>
+                                        <div class="card-info">
+                                                                                        <div class="card-name">Dorothy Sheppard</div>                                            <div class="card-age">Age 75</div>
+                                        </div>
+                                        <div class="waveform">
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                            <div class="wave-bar"></div>
+                                        </div>
+                                        <div class="audio-controls"> <button class="audio-btn play-btn"
+                                                aria-label="Play"> <svg width="16" height="16" viewBox="0 0 16 16"
+                                                    fill="none">
+                                                    <path d="M5 3L13 8L5 13V3Z" fill="currentColor" />
+                                                </svg> </button> <button class="audio-btn pause-btn" aria-label="Pause"
+                                                style="display: none;"> <svg width="16" height="16" viewBox="0 0 16 16"
+                                                    fill="none">
+                                                    <rect x="4" y="3" width="3" height="10" fill="currentColor" />
+                                                    <rect x="9" y="3" width="3" height="10" fill="currentColor" />
+                                                </svg> </button> </div>
+                                    </div>
+                                    <p class="story-text">"Working on the farm with my husband..."</p>
+                                </div>
+                            </li>
+                        </ul>
+                    </div> <!-- GlideJS Dots Navigation -->
+                    <div class="glide__bullets hero-carousel-dots" data-glide-el="controls[nav]"> <button
+                            class="glide__bullet hero-carousel-dot" data-glide-dir="=0"
+                            aria-label="Go to card 1"></button> <button class="glide__bullet hero-carousel-dot"
+                            data-glide-dir="=1" aria-label="Go to card 2"></button> <button
+                            class="glide__bullet hero-carousel-dot" data-glide-dir="=2"
+                            aria-label="Go to card 3"></button> </div>
                 </div>
             </div>
         </div>
@@ -119,32 +184,37 @@
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <rect x="6" y="8" width="20" height="16" rx="4" fill="#6366F1" opacity="0.1"/>
-                            <path d="M12 14L16 18L20 14" stroke="#6366F1" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <rect x="6" y="8" width="20" height="16" rx="4" fill="#6366F1" opacity="0.1" />
+                            <path d="M12 14L16 18L20 14" stroke="#6366F1" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                     </div>
                     <h3 class="feature-title">AI-guided interviews</h3>
-                    <p class="feature-description">Our intelligent system asks the right questions to uncover your most meaningful memories.</p>
+                    <p class="feature-description">Our intelligent system asks the right questions to uncover your most
+                        meaningful memories.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <circle cx="16" cy="16" r="10" fill="#8B5CF6" opacity="0.1"/>
-                            <path d="M12 16L14 18L20 12" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <circle cx="16" cy="16" r="10" fill="#8B5CF6" opacity="0.1" />
+                            <path d="M12 16L14 18L20 12" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                     </div>
                     <h3 class="feature-title">Professional editing</h3>
-                    <p class="feature-description">Your stories are expertly edited and polished for sharing with family and friends.</p>
+                    <p class="feature-description">Your stories are expertly edited and polished for sharing with family
+                        and friends.</p>
                 </div>
                 <div class="feature-card">
                     <div class="feature-icon">
                         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-                            <rect x="8" y="8" width="16" height="16" rx="4" fill="#EC4899" opacity="0.1"/>
-                            <path d="M16 12V20M12 16H20" stroke="#EC4899" stroke-width="2" stroke-linecap="round"/>
+                            <rect x="8" y="8" width="16" height="16" rx="4" fill="#EC4899" opacity="0.1" />
+                            <path d="M16 12V20M12 16H20" stroke="#EC4899" stroke-width="2" stroke-linecap="round" />
                         </svg>
                     </div>
                     <h3 class="feature-title">Secure sharing</h3>
-                    <p class="feature-description">Safely share your completed stories with loved ones through our secure platform.</p>
+                    <p class="feature-description">Safely share your completed stories with loved ones through our
+                        secure platform.</p>
                 </div>
             </div>
         </div>
@@ -162,21 +232,24 @@
                     <div class="step-number">1</div>
                     <div class="step-content">
                         <h3 class="step-title">Schedule your session</h3>
-                        <p class="step-description">Choose between in-person or virtual recording sessions that fit your schedule.</p>
+                        <p class="step-description">Choose between in-person or virtual recording sessions that fit your
+                            schedule.</p>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-number">2</div>
                     <div class="step-content">
                         <h3 class="step-title">Share your stories</h3>
-                        <p class="step-description">Our AI guides you through meaningful questions about your life experiences.</p>
+                        <p class="step-description">Our AI guides you through meaningful questions about your life
+                            experiences.</p>
                     </div>
                 </div>
                 <div class="step">
                     <div class="step-number">3</div>
                     <div class="step-content">
                         <h3 class="step-title">Receive your legacy</h3>
-                        <p class="step-description">Get beautifully edited recordings ready to share with family and future generations.</p>
+                        <p class="step-description">Get beautifully edited recordings ready to share with family and
+                            future generations.</p>
                     </div>
                 </div>
             </div>
@@ -192,31 +265,32 @@
             <div class="testimonials-grid">
                 <div class="testimonial-card">
                     <div class="testimonial-content">
-                        <p>"Vitae helped me preserve stories I never would have thought to share. My grandchildren will know their heritage because of this."</p>
+                        <p>"Vitae helped me preserve stories I never would have thought to share. My grandchildren will
+                            know their heritage because of this."</p>
                     </div>
                     <div class="testimonial-author">
                         <div class="author-avatar"></div>
                         <div class="author-info">
-                            <div class="author-name">Sarah Johnson</div>
-                            <div class="author-role">Grandmother of 5</div>
+                                                        <div class="author-name">Edith Salford</div>                            <div class="author-role">Retired nurse</div>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card">
                     <div class="testimonial-content">
-                        <p>"The questions were so thoughtful. It felt like talking to a dear friend who genuinely wanted to know my story."</p>
+                        <p>"The questions were so thoughtful. It felt like talking to a dear friend who genuinely wanted
+                            to know my story."</p>
                     </div>
                     <div class="testimonial-author">
                         <div class="author-avatar avatar-2"></div>
                         <div class="author-info">
-                            <div class="author-name">Robert Chen</div>
-                            <div class="author-role">Retired teacher</div>
+                                                        <div class="author-name">James Alfred</div>                            <div class="author-role">Former educator</div>
                         </div>
                     </div>
                 </div>
                 <div class="testimonial-card">
                     <div class="testimonial-content">
-                        <p>"I gave this to my children as a gift. They said it was the most meaningful present they've ever received."</p>
+                        <p>"I gave this to my children as a gift. They said it was the most meaningful present they've
+                            ever received."</p>
                     </div>
                     <div class="testimonial-author">
                         <div class="author-avatar avatar-3"></div>
@@ -240,7 +314,8 @@
                     <button class="btn btn-primary btn-large">
                         <span>Start your story</span>
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-                            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                            <path d="M6 12L10 8L6 4" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                stroke-linejoin="round" />
                         </svg>
                     </button>
                     <button class="btn btn-secondary btn-large">Schedule a call</button>
@@ -255,7 +330,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-brand">
-                                                            <div class="footer-logo">                        <span class="footer-logo-text">vitae</span>                    </div>
+                    <div class="footer-logo"> <span class="footer-logo-text">vitae</span> </div>
                     <p class="footer-tagline">Preserving stories, creating legacies</p>
                 </div>
                 <div class="footer-links">
@@ -285,6 +360,9 @@
         </div>
     </footer>
 
+    <script src="https://cdn.jsdelivr.net/npm/@glidejs/glide/dist/glide.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="script.js"></script>
 </body>
-</html> 
+
+</html>
