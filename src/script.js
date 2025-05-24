@@ -116,11 +116,11 @@ function animateFloatingElements() {
     });
 }
 
-// Hero testimonials cycling functionality (5 second intervals)
+// Hero testimonials cycling functionality (10 second intervals, single testimonial)
 function initTestimonialCarousel() {
-    const heroTestimonialCards = document.querySelectorAll('.hero-testimonials-container .testimonial-card');
+    const heroTestimonialCard = document.querySelector('.hero-testimonials-container .testimonial-card');
     
-    if (heroTestimonialCards.length !== 3) return;
+    if (!heroTestimonialCard) return;
 
     // Complete pool of testimonials for cycling
     const testimonialPool = [
@@ -186,74 +186,84 @@ function initTestimonialCarousel() {
         }
     ];
 
-    let currentSetIndex = 0;
+    let currentIndex = 0;
     
-    function getNextTestimonialSet() {
-        // Get next 3 testimonials, cycling through the pool
-        const startIndex = (currentSetIndex * 3) % testimonialPool.length;
-        const nextSet = [];
+    // Initialize the first testimonial (just show it, no animation)
+    heroTestimonialCard.classList.add('active');
+    setInitialTestimonial(heroTestimonialCard, testimonialPool[currentIndex]);
+    
+    function setInitialTestimonial(card, testimonial) {
+        // Set initial testimonial without animations
+        const nameElement = card.querySelector('.testimonial-name');
+        const ageElement = card.querySelector('.testimonial-age');
+        const textElement = card.querySelector('.testimonial-text');
+        const avatar = card.querySelector('.avatar');
         
-        for (let i = 0; i < 3; i++) {
-            const testimonialIndex = (startIndex + i) % testimonialPool.length;
-            nextSet.push(testimonialPool[testimonialIndex]);
+        if (nameElement) nameElement.textContent = testimonial.name;
+        if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;
+        if (textElement) textElement.textContent = `"${testimonial.text}"`;
+        
+        // Update avatar class
+        if (avatar) {
+            avatar.className = avatar.className.replace(/avatar-\d+/g, '');
+            if (testimonial.avatar) {
+                avatar.classList.add(testimonial.avatar);
+            }
         }
-        
-        currentSetIndex = (currentSetIndex + 1) % Math.ceil(testimonialPool.length / 3);
-        return nextSet;
     }
     
-    function updateTestimonialCard(card, testimonial, delay = 0) {
+    function getNextTestimonial() {
+        currentIndex = (currentIndex + 1) % testimonialPool.length;
+        return testimonialPool[currentIndex];
+    }
+    
+    function updateTestimonialCard(card, testimonial) {
+        // Add fade out class
+        card.classList.add('fade-out');
+        card.classList.remove('active');
+        
+        // After fade out, update content and fade back in
         setTimeout(() => {
-            // Add fade out class
-            card.classList.add('fade-out');
+            // Update content
+            const nameElement = card.querySelector('.testimonial-name');
+            const ageElement = card.querySelector('.testimonial-age');
+            const textElement = card.querySelector('.testimonial-text');
+            const avatar = card.querySelector('.avatar');
             
-            // After fade out, update content and fade back in
-            setTimeout(() => {
-                // Update content
-                const nameElement = card.querySelector('.testimonial-name');
-                const ageElement = card.querySelector('.testimonial-age');
-                const textElement = card.querySelector('.testimonial-text');
-                const avatar = card.querySelector('.avatar');
-                
-                if (nameElement) nameElement.textContent = testimonial.name;
-                if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;
-                if (textElement) textElement.textContent = `"${testimonial.text}"`;
-                
-                // Update avatar class
-                if (avatar) {
-                    // Remove all existing avatar classes
-                    avatar.className = avatar.className.replace(/avatar-\d+/g, '');
-                    if (testimonial.avatar) {
-                        avatar.classList.add(testimonial.avatar);
-                    }
+            if (nameElement) nameElement.textContent = testimonial.name;
+            if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;
+            if (textElement) textElement.textContent = `"${testimonial.text}"`;
+            
+            // Update avatar class
+            if (avatar) {
+                // Remove all existing avatar classes
+                avatar.className = avatar.className.replace(/avatar-\d+/g, '');
+                if (testimonial.avatar) {
+                    avatar.classList.add(testimonial.avatar);
                 }
-                
-                // Remove fade out and add fade in
-                card.classList.remove('fade-out');
-                card.classList.add('fade-in');
-                
-                // Clean up fade in class after animation
-                setTimeout(() => {
-                    card.classList.remove('fade-in');
-                }, 500);
-                
-            }, 250); // Wait for fade-out animation
-        }, delay);
+            }
+            
+            // Remove fade out and add fade in
+            card.classList.remove('fade-out');
+            card.classList.add('fade-in', 'active');
+            
+            // Clean up fade in class after animation
+            setTimeout(() => {
+                card.classList.remove('fade-in');
+            }, 600);
+            
+        }, 400); // Wait for fade-out animation
     }
     
-    function cycleTestimonials() {
-        const nextTestimonials = getNextTestimonialSet();
-        
-        // Update each testimonial card with staggered timing
-        heroTestimonialCards.forEach((card, index) => {
-            updateTestimonialCard(card, nextTestimonials[index], index * 150);
-        });
+    function cycleTestimonial() {
+        const nextTestimonial = getNextTestimonial();
+        updateTestimonialCard(heroTestimonialCard, nextTestimonial);
     }
     
-    // Start cycling every 5 seconds
-    setInterval(cycleTestimonials, 5000);
+    // Start cycling every 10 seconds
+    setInterval(cycleTestimonial, 10000);
     
-    console.log('✅ Hero testimonials cycling initialized - every 5 seconds');
+    console.log('✅ Hero testimonials cycling initialized - single testimonial every 10 seconds');
 }
 
 // Hero testimonials cycling system
