@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pricing - Vitae</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <link rel="stylesheet" href="styles.css?v=3.2">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #5855eb;
+            --secondary: #8b5cf6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --border: #e5e7eb;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            --success: #10b981;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        .main {
+            padding: 120px 0 60px 0;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Pricing Cards */
+        .pricing-section {
+            margin-bottom: 80px;
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .pricing-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .pricing-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .pricing-card.featured {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            transform: scale(1.05);
+        }
+
+        .pricing-card.featured:hover {
+            transform: scale(1.05) translateY(-5px);
+        }
+
+        .pricing-card.featured .card-price {
+            color: white;
+        }
+
+        .pricing-card.featured .card-description {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .pricing-card.featured .feature-item {
+            color: rgba(255, 255, 255, 0.95);
+        }
+
+        .pricing-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 30px 30px 0 0;
+        }
+
+        .pricing-card.featured::before {
+            display: none;
+        }
+
+        .card-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .card-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .card-price {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 5px;
+        }
+
+        .card-description {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .card-features {
+            list-style: none;
+            margin-bottom: 30px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+        }
+
+        .feature-icon {
+            color: var(--success);
+            margin-right: 10px;
+            font-weight: bold;
+        }
+
+        .pricing-card.featured .feature-icon {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .card-button {
+            width: 100%;
+            padding: 15px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 15px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .card-button:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        .pricing-card.featured .card-button {
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .pricing-card.featured .card-button:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        /* Add-ons Section */
+        .addons-section {
+            margin-bottom: 80px;
+        }
+
+        .addons-header {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .addons-header h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .addons-header p {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+        }
+
+        .addons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+        }
+
+        .addon-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+            text-align: center;
+        }
+
+        .addon-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .addon-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+
+        .addon-title {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 10px;
+        }
+
+        .addon-price {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 15px;
+        }
+
+        .addon-description {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .btn-large {
+            padding: 18px 40px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+            background: var(--primary);
+            color: white;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn-large:hover {
+            background: var(--primary-dark);
+            transform: translateY(-2px);
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2.2rem;
+            }
+
+            .pricing-grid {
+                grid-template-columns: 1fr;
+                gap: 30px;
+            }
+
+            .pricing-card.featured {
+                transform: none;
+            }
+
+            .pricing-card.featured:hover {
+                transform: translateY(-5px);
+            }
+
+            .addons-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+
+            .container {
+                padding: 0 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .pricing-card {
+                padding: 30px 20px;
+            }
+
+            .card-price {
+                font-size: 2.5rem;
+            }
+
+            .addon-card {
+                padding: 25px 20px;
+            }
+
+            .cta-section {
+                padding: 40px 20px;
+            }
+
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--text-primary);
+            color: white;
+            padding: 40px 0;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .footer-brand {
+            margin-bottom: 20px;
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .footer-tagline {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-column h4 {
+            color: white;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .footer-column a {
+            color: var(--text-tertiary);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 8px;
+            transition: color 0.3s;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #374151;
+            color: var(--text-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="index.html" style="text-decoration: none;">
+                    <div class="logo"> <span class="logo-text">vitae</span> </div>
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a href="how-it-works.html" class="nav-link">How it works</a>
+                <a href="pricing.html" class="nav-link">Pricing</a>
+                <a href="start-your-story.html" class="btn btn-primary">Start your story</a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="container">
+            <section class="page-header">
+                <h1>Simple, Transparent Pricing</h1>
+                <p>No per-word pricing. No hidden fees. Write as much as your heart desires—your story has no limits.</p>
+            </section>
+
+            <section class="pricing-section">
+                <div class="pricing-grid">
+                    <div class="pricing-card" data-aos="fade-up" data-aos-delay="0">
+                        <div class="card-header">
+                            <h3 class="card-title">Digital Autobiography</h3>
+                            <div class="card-price">$149</div>
+                        </div>
+                        <ul class="card-features">
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                AI-guided story creation
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                Up to 100,000 words included
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                High-quality digital format (PDF/EPUB)
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                Write freely without word anxiety
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                Unlimited revisions
+                            </li>
+                        </ul>
+                        <button class="card-button">Get Started</button>
+                    </div>
+
+                    <div class="pricing-card featured" data-aos="fade-up" data-aos-delay="200">
+                        <div class="card-header">
+                            <h3 class="card-title">Complete Package</h3>
+                            <div class="card-price">$374</div>
+                        </div>
+                        <ul class="card-features">
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                Everything in Digital package
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                Professional printed copy
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                Expert professional editing
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                Custom cover design
+                            </li>
+                            <li class="feature-item">
+                                <span class="feature-icon">✓</span>
+                                Most popular choice
+                            </li>
+                        </ul>
+                        <button class="card-button">Start Complete Package</button>
+                    </div>
+                </div>
+            </section>
+
+            <section class="addons-section">
+                <div class="addons-header">
+                    <h2>Optional Add-ons</h2>
+                    <p>Enhance your autobiography with these professional services</p>
+                </div>
+                <div class="addons-grid">
+                    <div class="addon-card" data-aos="fade-up" data-aos-delay="0">
+                        <div class="addon-icon">📖</div>
+                        <h4 class="addon-title">Printed Copy</h4>
+                        <div class="addon-price">+$50</div>
+                        <p class="addon-description">Beautiful hardcover book with premium binding and high-quality paper</p>
+                    </div>
+                    <div class="addon-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="addon-icon">✏️</div>
+                        <h4 class="addon-title">Professional Editing</h4>
+                        <div class="addon-price">+$100</div>
+                        <p class="addon-description">Expert editing to polish your story and ensure perfect flow and grammar</p>
+                    </div>
+                    <div class="addon-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="addon-icon">🎨</div>
+                        <h4 class="addon-title">Custom Cover Design</h4>
+                        <div class="addon-price">+$75</div>
+                        <p class="addon-description">Personalized cover design that reflects your unique story and personality</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="cta-section" data-aos="fade-up" data-aos-delay="400">
+                <h2>Ready to Begin Your Story?</h2>
+                <p>Join hundreds of families who have preserved their legacy. Start writing today with complete freedom and transparency.</p>
+                <a href="start-your-story.html" class="btn-large">Start Your Autobiography</a>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">vitae</div>
+                    <p class="footer-tagline">Preserving stories, creating legacies</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="how-it-works.html">How it works</a>
+                        <a href="pricing.html">Pricing</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <a href="#about">About</a>
+                        <a href="#careers">Careers</a>
+                        <a href="#contact">Contact</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#privacy">Privacy</a>
+                        <a href="#terms">Terms</a>
+                        <a href="#security">Security</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Vitae. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true
+        });
+    </script>
+</body>
+</html> 
