@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>How It Works - Vitae</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">    <link rel="stylesheet" href="styles.css?v=3.2">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #5855eb;
+            --secondary: #8b5cf6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --border: #e5e7eb;
+                        --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);        }
+
+                body {            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;            line-height: 1.6;            color: var(--text-primary);            min-height: 100vh;        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+                /* Custom button styles for this page */        .btn-large {            padding: 18px 40px;            font-size: 1.2rem;            border-radius: 30px;        }
+
+                /* Main Content */        .main {            padding: 120px 0 60px 0;        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Process Steps */
+        .process-section {
+            margin-bottom: 80px;
+        }
+
+        .step {
+            display: flex;
+            align-items: center;
+            margin-bottom: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .step:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .step::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 30px 30px 0 0;
+        }
+
+        .step-content {
+            flex: 1;
+            padding-right: 40px;
+        }
+
+        .step:nth-child(even) .step-content {
+            padding-right: 0;
+            padding-left: 40px;
+        }
+
+        .step-content h3 {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .step-content p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+
+        .step-features {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .step-features li {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .step-features li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .step-visual {
+            flex: 0 0 300px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .step-icon {
+            font-size: 4rem;
+            color: white;
+            opacity: 0.9;
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) {
+            width: 20px;
+            height: 20px;
+            top: 20%;
+            left: 15%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            width: 15px;
+            height: 15px;
+            top: 60%;
+            right: 20%;
+            animation-delay: 1s;
+        }
+
+        .floating-element:nth-child(3) {
+            width: 25px;
+            height: 25px;
+            bottom: 25%;
+            left: 25%;
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* FAQ Section */
+        .faq-section {
+            margin-top: 80px;
+        }
+
+        .faq-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 50px;
+            font-weight: 700;
+        }
+
+        .faq-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 30px;
+        }
+
+        .faq-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+
+        .faq-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .faq-card h4 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .faq-card p {
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            margin-top: 80px;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+                /* Mobile Responsive */        @media (max-width: 768px) {            .page-header h1 {                font-size: 2.2rem;            }            .step {                flex-direction: column !important;                text-align: center;                padding: 30px 20px;            }            .step-content {                padding: 0 !important;                margin-bottom: 30px;            }            .step-visual {                flex: none;                width: 100%;                max-width: 280px;                height: 160px;            }            .faq-grid {                grid-template-columns: 1fr;                gap: 20px;            }            .container {                padding: 0 15px;            }        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .step {
+                padding: 25px 15px;
+            }
+
+            .step-content h3 {
+                font-size: 1.5rem;
+            }
+
+            .cta-section {
+                padding: 40px 20px;
+            }
+
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--text-primary);
+            color: white;
+            padding: 40px 0;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .footer-brand {
+            margin-bottom: 20px;
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .footer-tagline {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-column h4 {
+            color: white;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .footer-column a {
+            color: var(--text-tertiary);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 8px;
+            transition: color 0.3s;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #374151;
+            color: var(--text-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">        <div class="nav-container">            <div class="nav-brand">                <a href="index.html" style="text-decoration: none;">                    <div class="logo"> <span class="logo-text">vitae</span> </div>                </a>            </div>            <div class="nav-menu">                <a href="features.html" class="nav-link">Features</a>                <a href="how-it-works.html" class="nav-link">How it works</a>                <a href="index.html#pricing" class="nav-link">Pricing</a>                <button class="btn btn-primary" onclick="showModal('waitlist')">Start your story</button>            </div>        </div>    </nav>
+
+    <main class="main">
+        <div class="container">
+            <section class="page-header">
+                <h1>How Vitae Works</h1>
+                <p>Our simple 3-step process transforms your memories into a beautiful, professionally printed autobiography that your family will treasure forever.</p>
+            </section>
+
+            <section class="process-section">
+                <div class="step" data-aos="fade-up" data-aos-delay="0">
+                    <div class="step-content">
+                        <h3>Share Your Stories</h3>
+                        <p>No need to write anything, and you don't need a script. Just talk naturally about your life and memories. There's no pressure to get it perfect, just share what comes to mind.</p>
+                        <ul class="step-features">
+                            <li>AI-guided conversation prompts help unlock memories</li>
+                            <li>Record at your own pace, anytime, anywhere</li>
+                            <li>Intelligent follow-up questions reveal deeper stories</li>
+                            <li>Voice recordings are securely encrypted</li>
+                        </ul>
+                    </div>
+                    <div class="step-visual">
+                        <div class="step-icon">🎙️</div>
+                        <div class="floating-elements">
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" data-aos="fade-up" data-aos-delay="200">
+                    <div class="step-content">
+                        <h3>Professional Writing & Editing</h3>
+                        <p>Our expert writers transform your recordings into beautifully crafted prose that captures your unique voice. You'll review and approve every word before we move to the next step.</p>
+                        <ul class="step-features">
+                            <li>Professional writers craft your narrative</li>
+                            <li>Easy online review and editing interface</li>
+                            <li>Add family photos and documents seamlessly</li>
+                            <li>Choose from beautiful design templates</li>
+                        </ul>
+                    </div>
+                    <div class="step-visual">
+                        <div class="step-icon">📝</div>
+                        <div class="floating-elements">
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="step" data-aos="fade-up" data-aos-delay="400">
+                    <div class="step-content">
+                        <h3>Receive Your Legacy</h3>
+                        <p>Your finished autobiography is professionally printed and bound, creating a lasting keepsake that can be shared with family for generations. Every book is crafted with museum-quality materials.</p>
+                        <ul class="step-features">
+                            <li>Premium hardcover binding with dust jacket</li>
+                            <li>Museum-quality paper and archival printing</li>
+                            <li>Multiple copies available for family</li>
+                            <li>Digital version included for easy sharing</li>
+                        </ul>
+                    </div>
+                    <div class="step-visual">
+                        <div class="step-icon">📚</div>
+                        <div class="floating-elements">
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="faq-section" data-aos="fade-up">
+                <h2>Frequently Asked Questions</h2>
+                <div class="faq-grid">
+                    <div class="faq-card" data-aos="fade-up" data-aos-delay="0">
+                        <h4>How long does the process take?</h4>
+                        <p>Most stories are completed within 6-8 weeks from start to finish. The interview phase typically takes 2-3 weeks, followed by 3-4 weeks for writing, editing, and printing.</p>
+                    </div>
+                    <div class="faq-card" data-aos="fade-up" data-aos-delay="100">
+                        <h4>What if I'm not comfortable with technology?</h4>
+                        <p>No tech skills required! Our process is designed to be simple and intuitive. We also provide phone support and can arrange in-person assistance if needed.</p>
+                    </div>
+                    <div class="faq-card" data-aos="fade-up" data-aos-delay="200">
+                        <h4>How much does it cost?</h4>
+                        <p>Our standard package starts at $2,500 and includes the complete process plus one printed copy. Additional copies and premium options are available.</p>
+                    </div>
+                    <div class="faq-card" data-aos="fade-up" data-aos-delay="300">
+                        <h4>Can I include family photos?</h4>
+                        <p>Absolutely! We help you scan and include family photos, documents, and other memorabilia throughout your book. Our design team ensures they're beautifully integrated.</p>
+                    </div>
+                    <div class="faq-card" data-aos="fade-up" data-aos-delay="400">
+                        <h4>What if I don't remember everything?</h4>
+                        <p>That's perfectly normal! Our AI interviewer is trained to help trigger memories and can work with family members to fill in details and verify stories.</p>
+                    </div>
+                    <div class="faq-card" data-aos="fade-up" data-aos-delay="500">
+                        <h4>Is my information secure?</h4>
+                        <p>Yes, we take privacy seriously. All recordings and documents are encrypted, and we never share your personal information. You retain full ownership of your story.</p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="cta-section" data-aos="fade-up" data-aos-delay="600">
+                <h2>Ready to Start Your Story?</h2>
+                <p>Join over 1,200 families who have preserved their legacy with Vitae. Your story matters, and we're here to help you tell it beautifully.</p>
+                <button class="btn btn-primary btn-large" onclick="showModal('waitlist')">Begin Your Journey Today</button>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">vitae</div>
+                    <p class="footer-tagline">Preserving stories, creating legacies</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="features.html">Features</a>
+                        <a href="how-it-works.html">How it works</a>
+                        <a href="index.html#pricing">Pricing</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <a href="#about">About</a>
+                        <a href="#careers">Careers</a>
+                        <a href="#contact">Contact</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#privacy">Privacy</a>
+                        <a href="#terms">Terms</a>
+                        <a href="#security">Security</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Vitae. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script src="script.js"></script>
+    <script>
+        // Initialize AOS
+        AOS.init({
+            duration: 600,
+            easing: 'ease-out-cubic',
+            once: true,
+            offset: 50
+        });
+
+        
+
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Add interactive hover effects to step visuals
+        document.querySelectorAll('.step-visual').forEach(visual => {
+            visual.addEventListener('mouseenter', () => {
+                const elements = visual.querySelectorAll('.floating-element');
+                elements.forEach((el, index) => {
+                    el.style.animationDelay = `${index * 0.2}s`;
+                    el.style.animationDuration = '2s';
+                });
+            });
+        });
+
+        // Modal functionality (using existing modal from script.js)
+        function showModal(type) {
+            // This will use the modal system from the main script.js file
+            if (window.showModal) {
+                window.showModal(type);
+            } else {
+                // Fallback if script.js isn't loaded
+                alert('Join our waitlist! Visit our main page to get started.');
+            }
+        }
+    </script>
+</body>
+</html> 
