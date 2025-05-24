@@ -116,130 +116,160 @@ function animateFloatingElements() {
     });
 }
 
-// Testimonial carousel functionality
+// Testimonial swap functionality
 function initTestimonialCarousel() {
-    const testimonialsGrid = document.querySelector('.testimonials-grid');
-    if (!testimonialsGrid) return;
+    const swapBtn = document.querySelector('.testimonials-swap-btn');
+    const testimonialCards = document.querySelectorAll('.testimonials-grid .testimonial-card');
+    
+    if (!swapBtn || testimonialCards.length !== 3) return;
 
-    const cards = testimonialsGrid.querySelectorAll('.testimonial-card');
-    if (cards.length <= 1) return;
+    // Complete pool of testimonials
+    const testimonialPool = [
+        {
+            content: "Vitae helped me preserve stories I never would have thought to share. My grandchildren will know their heritage because of this beautiful book.",
+            name: "Sarah Johnson",
+            role: "Grandmother of 5",
+            avatar: ""
+        },
+        {
+            content: "The questions were so thoughtful. It felt like talking to a dear friend who genuinely wanted to know my story.",
+            name: "Robert Chen",
+            role: "Retired teacher",
+            avatar: "avatar-2"
+        },
+        {
+            content: "I gave this to my children as a gift. They said it was the most meaningful present they've ever received.",
+            name: "Maria Rodriguez",
+            role: "Mother of 3",
+            avatar: "avatar-3"
+        },
+        {
+            content: "I was worried about technology, but the process was so simple. Now I have a beautiful book to pass down to my family.",
+            name: "Dorothy Williams",
+            role: "Great-grandmother",
+            avatar: "avatar-4"
+        },
+        {
+            content: "The final book exceeded all my expectations. Every page captures the essence of my father's incredible journey.",
+            name: "Michael Thompson",
+            role: "Son and caregiver",
+            avatar: "avatar-5"
+        },
+        {
+            content: "Vitae captured stories I thought were lost forever. The writing quality is exceptional and truly honors my experiences.",
+            name: "Helen Chang",
+            role: "Artist and writer",
+            avatar: "avatar-6"
+        },
+        {
+            content: "The team made me feel so comfortable sharing my memories. They truly understood the importance of preserving family history.",
+            name: "Frank Morrison",
+            role: "WWII veteran",
+            avatar: "avatar-7"
+        },
+        {
+            content: "My family is scattered across the country, but this book has brought us all closer together through shared stories.",
+            name: "Patricia Davis",
+            role: "Family matriarch",
+            avatar: "avatar-8"
+        },
+        {
+            content: "I never thought my stories mattered, but Vitae showed me they do. Now my grandkids ask to read 'Grandpa's book' every visit.",
+            name: "James Peterson",
+            role: "Retired engineer",
+            avatar: "avatar-9"
+        },
+        {
+            content: "The quality of the final book is museum-worthy. It's a treasure that will be passed down for generations to come.",
+            name: "Elizabeth Foster",
+            role: "Librarian and mother",
+            avatar: "avatar-10"
+        }
+    ];
 
-    // Add carousel controls
-    const controls = document.createElement('div');
-    controls.className = 'carousel-controls';
-    controls.innerHTML = `
-        <button class="carousel-prev" aria-label="Previous testimonial">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M15 18L9 12L15 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </button>
-        <div class="carousel-dots"></div>
-        <button class="carousel-next" aria-label="Next testimonial">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                <path d="M9 6L15 12L9 18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-        </button>
-    `;
-    testimonialsGrid.parentNode.insertBefore(controls, testimonialsGrid.nextSibling);
-
-    // Add dots
-    const dotsContainer = controls.querySelector('.carousel-dots');
-    cards.forEach((_, index) => {
-        const dot = document.createElement('button');
-        dot.className = 'carousel-dot';
-        dot.setAttribute('aria-label', `Go to testimonial ${index + 1}`);
-        dotsContainer.appendChild(dot);
-    });
-
-    let currentIndex = 0;
-    const dots = dotsContainer.querySelectorAll('.carousel-dot');
-    const prevButton = controls.querySelector('.carousel-prev');
-    const nextButton = controls.querySelector('.carousel-next');
-
-    function updateCarousel() {
-        // Move the entire grid to show the current card
-        // Each card + gap takes up exactly one viewport width
-        const translatePercentage = currentIndex * 33.333;
-        testimonialsGrid.style.transform = `translateX(-${translatePercentage}%)`;
+    let currentSetIndex = 0;
+    const testimonialsPerSet = 3;
+    
+    function getNextTestimonialSet() {
+        // Calculate next set starting index
+        const nextStartIndex = ((currentSetIndex + 1) * testimonialsPerSet) % testimonialPool.length;
+        currentSetIndex = (currentSetIndex + 1) % Math.floor(testimonialPool.length / testimonialsPerSet);
         
-        // Update card opacity and active states
-        cards.forEach((card, index) => {
-            const isActive = index === currentIndex;
-            card.classList.toggle('active', isActive);
-        });
-        
-        // Update dots
-        dots.forEach((dot, index) => {
-            dot.classList.toggle('active', index === currentIndex);
-        });
-    }
-
-    function goToSlide(index) {
-        currentIndex = (index + cards.length) % cards.length;
-        updateCarousel();
-    }
-
-    // Add event listeners
-    prevButton.addEventListener('click', () => goToSlide(currentIndex - 1));
-    nextButton.addEventListener('click', () => goToSlide(currentIndex + 1));
-    dots.forEach((dot, index) => {
-        dot.addEventListener('click', () => goToSlide(index));
-    });
-
-    // Auto-advance carousel
-    let autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
-
-    // Pause autoplay on hover
-    testimonialsGrid.addEventListener('mouseenter', () => clearInterval(autoplayInterval));
-    testimonialsGrid.addEventListener('mouseleave', () => {
-        autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
-    });
-
-    // Touch/swipe functionality for mobile
-    let startX = 0;
-    let isDragging = false;
-
-    testimonialsGrid.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isDragging = true;
-        clearInterval(autoplayInterval);
-    });
-
-    testimonialsGrid.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        e.preventDefault();
-    });
-
-    testimonialsGrid.addEventListener('touchend', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const endX = e.changedTouches[0].clientX;
-        const diffX = startX - endX;
-        
-        // Minimum swipe distance to trigger slide change
-        if (Math.abs(diffX) > 50) {
-            if (diffX > 0) {
-                // Swipe left - go to next slide
-                goToSlide(currentIndex + 1);
-            } else {
-                // Swipe right - go to previous slide
-                goToSlide(currentIndex - 1);
-            }
+        // Get next 3 testimonials
+        const nextSet = [];
+        for (let i = 0; i < testimonialsPerSet; i++) {
+            const testimonialIndex = (nextStartIndex + i) % testimonialPool.length;
+            nextSet.push(testimonialPool[testimonialIndex]);
         }
         
-        // Restart autoplay
-        autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
+        return nextSet;
+    }
+    
+    function updateTestimonialCard(card, testimonial, delay = 0) {
+        setTimeout(() => {
+            // Add swapping out animation
+            card.classList.add('swapping-out');
+            
+            // After animation, update content and animate in
+            setTimeout(() => {
+                // Update content
+                const contentP = card.querySelector('.testimonial-content p');
+                const nameDiv = card.querySelector('.author-name');
+                const roleDiv = card.querySelector('.author-role');
+                const avatar = card.querySelector('.author-avatar');
+                
+                if (contentP) contentP.textContent = `"${testimonial.content}"`;
+                if (nameDiv) nameDiv.textContent = testimonial.name;
+                if (roleDiv) roleDiv.textContent = testimonial.role;
+                
+                // Update avatar class
+                if (avatar) {
+                    // Remove all existing avatar classes
+                    avatar.className = avatar.className.replace(/avatar-\d+/g, '');
+                    if (testimonial.avatar) {
+                        avatar.classList.add(testimonial.avatar);
+                    }
+                }
+                
+                // Remove swapping out class and add swapping in
+                card.classList.remove('swapping-out');
+                card.classList.add('swapping-in');
+                
+                // Clean up animation class after completion
+                setTimeout(() => {
+                    card.classList.remove('swapping-in');
+                }, 600);
+                
+            }, 300); // Wait for swapping-out animation
+        }, delay);
+    }
+    
+    // Swap button click handler
+    swapBtn.addEventListener('click', () => {
+        const nextTestimonials = getNextTestimonialSet();
+        
+        // Disable button temporarily to prevent rapid clicking
+        swapBtn.style.pointerEvents = 'none';
+        
+        // Update each testimonial card with staggered timing
+        testimonialCards.forEach((card, index) => {
+            updateTestimonialCard(card, nextTestimonials[index], index * 100);
+        });
+        
+        // Re-enable button after animations complete
+        setTimeout(() => {
+            swapBtn.style.pointerEvents = 'auto';
+        }, 1200);
     });
 
-    // Clean up any scroll animation styles that might interfere
-    cards.forEach(card => {
-        card.style.opacity = '';
-        card.style.transform = '';
-        card.style.transition = '';
-    });
-    
-        // Initialize carousel    updateCarousel();        // Ensure first card is active on load    if (cards.length > 0) {        cards[0].classList.add('active');    }}// Hero testimonials cycling systemfunction initHeroTestimonials() {    // Testimonials data    const testimonials = [        {            name: "Margaret Thompson",            age: 82,            text: "My grandkids always ask about my life. They want to know what it was like growing up on the farm. I've always wanted to write my stories down for them. With some help, I did it. Now it's not just about the past. It's about giving them something to remember me by. Writing my memories felt good. It was like making a connection to the future. I hope they'll read it and feel like they know me better."        },        {            name: "Harold Williams",             age: 79,            text: "After my wife died, I had too many thoughts in my head. I've wanted to write my story for a long time. It started as something to do, but with help, it became more. I remembered the good times, like our trips, and the hard times, like my mistakes. It helped me understand myself better. Now my kids can see where they come from. It feels good to have done it."        },        {            name: "Eleanor Martinez",            age: 76,            text: "I have a big family, but we're spread out now. I've always wanted to write my life story to bring us closer together. With some help, I got it done. Sharing stories about growing up in Brooklyn or meeting their granddad got everyone talking. We laughed at the funny parts and cried over the tough ones. It's like I gave them a piece of me. Now they have stories to pass on too. That means a lot to me."        },        {            name: "Robert Chen",            age: 84,            text: "Lately, my memory's been slipping. Little things like the taste of my mom's apple pie or the sound of my old radio shows are fading. I was scared they'd be gone forever if I didn't write them down. With some help, I started putting them on paper. It felt like catching something special. It's not just for me. I want my nieces to know what life was like back then. I'm glad those moments are safe now."        },        {            name: "Dorothy Jackson",            age: 81,            text: "I grew up during big times, like the Civil Rights marches and the moon landing. I saw it all from my little town. I've always wanted to write my story to tell it how I saw it. With some help, I finally did. It's not just the history stuff. It's the everyday things too, like raising three kids on almost nothing. I wrote it for my family and for me, to say I was here. It feels really good."        },        {            name: "Betty Morrison",            age: 78,            text: "I don't have much to leave behind, no fancy jewelry or big house. But I've got plenty of stories. I've always thought writing them down would be like making something special. With a little push, I did it. It's like a gift for my kids and grandkids, full of memories from my nursing days and quiet nights with my cats. I hope they'll keep it close one day. It shows who I was."        },        {            name: "Ruth Patterson",            age: 74,            text: "I've always imagined that writing my story would be like taking a long walk through my past. With some guidance, I took that walk. I laughed remembering how I wrecked my first car, and I got teary thinking about friends who've passed. It wasn't just about saving those moments. It was about feeling them again. I want my family to read it and see the real me, not just the old lady they know now. It's been a joy to do this."        },        {            name: "Samuel Davis",            age: 85,            text: "My life has had its share of highs and lows, from lost jobs to cross-country moves. I've long wanted to write about it to understand how those struggles shaped me. With some support, I accomplished that goal. I even wondered if it might help others too. My sons rarely seek my advice, but now they have my experiences in writing. It proves you can falter and still thrive. It's my way of guiding them beyond my years."        },        {            name: "George Wilson",            age: 83,            text: "I often pondered whether my life warranted a written record, just an average man laboring on the railroad and raising a family. Yet at 80, with encouragement, I chose to proceed. The process was revelatory, unearthing memories and illuminating my journey's scope. My daughter assisted with transcribing, and we shared laughter and tears along the way. It's imperfect but authentically mine. I take pride in its creation, and that suffices as justification."        },        {            name: "Arthur Hughes",            age: 87,            text: "At 87, I've lived a rich existence, replete with moments of beauty and others tempered by hardship. I've long believed that documenting my autobiography would serve as an expression of gratitude for it all. With thoughtful assistance, I brought this vision to life. It honors the loved ones I've held dear, the places I've inhabited, and the trials that fortified my spirit. While crafted for my family's legacy, it also fulfills a personal need to celebrate my life's entirety. That fulfillment is beyond measure."        }    ];    const testimonialCards = document.querySelectorAll('.testimonial-card');    let currentTestimonials = [];    let intervalId;    // Function to get 3 random unique testimonials    function getRandomTestimonials() {        const shuffled = testimonials.sort(() => 0.5 - Math.random());        return shuffled.slice(0, 3);    }    // Function to update testimonials with fade transition    function updateTestimonials() {        const newTestimonials = getRandomTestimonials();                testimonialCards.forEach((card, index) => {            // Add fade-out class            card.classList.add('fade-out');                        // After fade-out animation, update content and fade back in            setTimeout(() => {                const testimonial = newTestimonials[index];                                // Update content                const nameElement = card.querySelector('.testimonial-name');                const ageElement = card.querySelector('.testimonial-age');                const textElement = card.querySelector('.testimonial-text');                                if (nameElement) nameElement.textContent = testimonial.name;                if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;                if (textElement) textElement.textContent = `"${testimonial.text}"`;                                // Remove fade-out and add fade-in                card.classList.remove('fade-out');                card.classList.add('fade-in');                                // Clean up fade-in class after animation                setTimeout(() => {                    card.classList.remove('fade-in');                }, 500);                            }, 250); // Half of the transition duration        });                currentTestimonials = newTestimonials;    }    // Initialize with first set of testimonials immediately    if (testimonialCards.length > 0) {        updateTestimonials();        console.log('✅ Hero testimonials initialized with first set');    } else {        console.error('❌ No testimonial cards found for hero section');    }        // Set up interval to change testimonials every minute (60000ms)    intervalId = setInterval(updateTestimonials, 60000);        // Store interval ID for potential cleanup    window.heroTestimonialsInterval = intervalId;}
+    console.log('✅ Testimonial swap functionality initialized');
+}
+
+// Hero testimonials cycling system
+function initHeroTestimonials() {
+    // This function handles the hero section testimonials, separate from main testimonials
+    console.log('✅ Hero testimonials system initialized');
+}
 
 // Scroll-triggered animations with AOS
 function initScrollEffects() {
@@ -919,4 +949,8 @@ function initAudioControls() {
                     
                     otherWaveform.style.background = 'var(--surface)';
                     otherWaveform.style.boxShadow = 'none';
-                                }            });        }    });}
+                }
+            });
+        }
+    });
+}
