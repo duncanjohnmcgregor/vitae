@@ -19,7 +19,10 @@ param(
     [switch]$SkipFirebase,
     
     [Parameter(Mandatory=$false)]
-    [switch]$DeployFunctionsOnly
+    [switch]$DeployFunctionsOnly,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$SkipEmulatorCleanup
 )
 
 # Set error action preference
@@ -54,6 +57,83 @@ function Test-Command {
     try { if (Get-Command $Command) { return $true } }
     catch { return $false }
     finally { $ErrorActionPreference = $oldPreference }
+}
+
+# Function to stop existing Firebase emulator processes
+function Stop-FirebaseEmulators {
+    Write-Status "Checking for existing Firebase emulator processes..."
+    
+    try {
+        # Stop Firebase emulators using the CLI (most reliable method)
+        $output = firebase emulators:exec --help 2>&1
+        if ($LASTEXITCODE -eq 0) {
+            Write-Status "Attempting to stop Firebase emulators gracefully..."
+            firebase emulators:exec "echo 'Stopping emulators...'" 2>$null
+        }
+    }
+    catch {
+        # Ignore errors from firebase command
+    }
+    
+    # Kill Firebase-related processes
+    $processesToKill = @(
+        "firebase",
+        "java"  # Firestore emulator often runs on Java
+    )
+    
+    $killedAny = $false
+    foreach ($processName in $processesToKill) {
+        try {
+            $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
+            if ($processes) {
+                Write-Status "Stopping existing $processName processes..."
+                $processes | Stop-Process -Force -ErrorAction SilentlyContinue
+                $killedAny = $true
+            }
+        }
+        catch {
+            # Ignore errors - process might not exist
+        }
+    }
+    
+    # Also kill Node.js processes that might be running Firebase Functions
+    try {
+        $nodeProcesses = Get-Process -Name "node" -ErrorAction SilentlyContinue | Where-Object {
+            $_.CommandLine -like "*firebase*" -or 
+            $_.CommandLine -like "*functions-framework*" -or
+            $_.CommandLine -like "*emulator*"
+        }
+        if ($nodeProcesses) {
+            Write-Status "Stopping Firebase-related Node.js processes..."
+            $nodeProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
+            $killedAny = $true
+        }
+    }
+    catch {
+        # Get-Process might not support CommandLine property on all systems
+        # Try alternative approach
+        try {
+            $allNodeProcesses = Get-Process -Name "node" -ErrorAction SilentlyContinue
+            if ($allNodeProcesses) {
+                # Kill all node processes as a fallback (less precise but effective)
+                Write-Warning "Stopping all Node.js processes (some may be unrelated to Firebase)..."
+                $allNodeProcesses | Stop-Process -Force -ErrorAction SilentlyContinue
+                $killedAny = $true
+            }
+        }
+        catch {
+            # Ignore if this fails too
+        }
+    }
+    
+    # Wait a moment for processes to fully terminate
+    if ($killedAny) {
+        Write-Status "Waiting for processes to terminate..."
+        Start-Sleep -Seconds 3
+        Write-Success "Existing emulator processes stopped"
+    } else {
+        Write-Status "No existing emulator processes found"
+    }
 }
 
 # Function to read project ID from terraform configuration
@@ -168,6 +248,14 @@ function Deploy-FirebaseFunctions {
         Invoke-Command -Command "firebase deploy --only functions" -ErrorMessage "Failed to deploy Firebase Functions to production"
     } else {
         Invoke-Command -Command "firebase use default" -ErrorMessage "Failed to switch to default Firebase project"
+        
+        # Stop any existing emulator processes before starting new ones (unless skipped)
+        if (-not $SkipEmulatorCleanup) {
+            Stop-FirebaseEmulators
+        } else {
+            Write-Status "Skipping emulator cleanup (existing emulators may continue running)"
+        }
+        
         Write-Status "Starting Firebase emulators in background..."
         
         # Start emulators in a new PowerShell window
@@ -314,6 +402,7 @@ if ($Environment -eq 'prod') {
     Write-Host "  Skip Terraform: $SkipTerraform" -ForegroundColor Cyan
     Write-Host "  Skip Firebase: $SkipFirebase" -ForegroundColor Cyan
     Write-Host "  Functions Only: $DeployFunctionsOnly" -ForegroundColor Cyan
+    Write-Host "  Skip Emulator Cleanup: $SkipEmulatorCleanup" -ForegroundColor Cyan
     
     # Authenticate with Google Cloud
     Write-Status "Ensuring Google Cloud authentication..."
@@ -368,6 +457,11 @@ Write-Host "=================================================" -ForegroundColor 
 if ($Environment -eq 'local') {
     Write-Success "Local development environment is ready!"
     Write-Host "`nFirebase Emulators are running in a separate window" -ForegroundColor Yellow
+    if (-not $SkipEmulatorCleanup) {
+        Write-Host "Note: Any existing emulator processes were stopped before starting new ones" -ForegroundColor Yellow
+    } else {
+        Write-Host "Note: Emulator cleanup was skipped - existing emulators may still be running" -ForegroundColor Yellow
+    }
     Write-Host "Firebase Emulator UI: http://localhost:4001" -ForegroundColor Cyan
     Write-Host "Website (hosting): http://localhost:3000" -ForegroundColor Cyan
     Write-Host "Cloud Function endpoint: http://localhost:5001/vitae-local/us-central1/handleWaitlistSubmission" -ForegroundColor Cyan

@@ -63,3 +63,56 @@ exports.handleWaitlistSubmission = functions.https.onRequest((req, res) => {
     }
   });
 });
+
+exports.handleStartStorySubmission = functions.https.onRequest((req, res) => {
+  cors(req, res, async () => {
+    if (req.method !== 'POST') {
+      res.status(405).json({ error: 'Method Not Allowed' });
+      return;
+    }
+
+    try {
+      const { firstName, lastName, email, phone, age, motivation, timeline } = req.body;
+      
+      // Validate required fields
+      if (!firstName || !lastName || !email) {
+        res.status(400).json({ error: 'First name, last name, and email are required' });
+        return;
+      }
+
+      if (!email.includes('@')) {
+        res.status(400).json({ error: 'Invalid email address' });
+        return;
+      }
+
+      console.log('Start story submission received:', { firstName, lastName, email });
+
+      // Save to Firestore
+      const db = admin.firestore();
+      const docRef = await db.collection('start-story-submissions').add({
+        firstName,
+        lastName,
+        email,
+        phone: phone || '',
+        age: age || '',
+        motivation: motivation || '',
+        timeline: timeline || '',
+        timestamp: new Date(),
+        userAgent: req.headers['user-agent'] || '',
+        ip: req.headers['x-forwarded-for'] || req.connection.remoteAddress || '',
+        status: 'pending'
+      });
+
+      console.log('Start story document written with ID: ', docRef.id);
+
+      res.status(200).json({ 
+        success: true, 
+        message: 'Thank you for starting your story journey! We\'ll contact you within 24 hours.',
+        id: docRef.id
+      });
+    } catch (error) {
+      console.error('Error handling start story submission:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    }
+  });
+});

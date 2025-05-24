@@ -4,5 +4,8 @@ service cloud.firestore {
     match /waitlist/{document=**} {
       allow read, write: if true;  // Allow all operations for local development
     }
+    match /start-story-submissions/{document=**} {
+      allow read, write: if true;  // Allow all operations for local development
+    }
   }
 }
