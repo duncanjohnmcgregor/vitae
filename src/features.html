@@ -1,0 +1,629 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Features - Vitae</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/aos@2.3.1/dist/aos.css">
+    <link rel="stylesheet" href="styles.css?v=3.2">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #6366f1;
+            --primary-dark: #5855eb;
+            --secondary: #8b5cf6;
+            --text-primary: #1f2937;
+            --text-secondary: #6b7280;
+            --text-tertiary: #9ca3af;
+            --surface: #ffffff;
+            --background: #f8fafc;
+            --border: #e5e7eb;
+            --shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: var(--text-primary);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+
+        /* Custom button styles for this page */
+        .btn-large {
+            padding: 18px 40px;
+            font-size: 1.2rem;
+            border-radius: 30px;
+        }
+
+        /* Main Content */
+        .main {
+            padding: 120px 0 60px 0;
+        }
+
+        .page-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .page-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }
+
+        .page-header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        /* Feature Cards Section */
+        .features-section {
+            margin-bottom: 80px;
+        }
+
+        .feature-card {
+            display: flex;
+            align-items: center;
+            margin-bottom: 60px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            transition: all 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+        }
+
+        .feature-card:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 30px 30px 0 0;
+        }
+
+        .feature-content {
+            flex: 1;
+            padding-right: 40px;
+        }
+
+        .feature-card:nth-child(even) .feature-content {
+            padding-right: 0;
+            padding-left: 40px;
+        }
+
+        .feature-content h3 {
+            font-size: 1.8rem;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .feature-content p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 20px;
+            line-height: 1.7;
+        }
+
+        .feature-specs {
+            list-style: none;
+            margin-bottom: 25px;
+        }
+
+        .feature-specs li {
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            padding-left: 25px;
+            position: relative;
+        }
+
+        .feature-specs li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--primary);
+            font-weight: bold;
+        }
+
+        .feature-visual {
+            flex: 0 0 300px;
+            height: 200px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-icon {
+            font-size: 4rem;
+            color: white;
+            opacity: 0.9;
+        }
+
+        .floating-elements {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+
+        .floating-element {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .floating-element:nth-child(1) {
+            width: 20px;
+            height: 20px;
+            top: 20%;
+            left: 15%;
+            animation-delay: 0s;
+        }
+
+        .floating-element:nth-child(2) {
+            width: 15px;
+            height: 15px;
+            top: 60%;
+            right: 20%;
+            animation-delay: 1s;
+        }
+
+        .floating-element:nth-child(3) {
+            width: 25px;
+            height: 25px;
+            bottom: 25%;
+            left: 25%;
+            animation-delay: 2s;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+        }
+
+        /* Stats Section */
+        .stats-section {
+            margin-top: 80px;
+            margin-bottom: 80px;
+        }
+
+        .stats-section h2 {
+            text-align: center;
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 50px;
+            font-weight: 700;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 30px;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.9);
+            padding: 30px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            font-weight: 500;
+        }
+
+        .stat-description {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+            margin-top: 8px;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            text-align: center;
+            margin-top: 80px;
+            padding: 60px 40px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .cta-section h2 {
+            font-size: 2.5rem;
+            color: var(--text-primary);
+            margin-bottom: 20px;
+            font-weight: 700;
+        }
+
+        .cta-section p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .page-header h1 {
+                font-size: 2.2rem;
+            }
+            .feature-card {
+                flex-direction: column !important;
+                text-align: center;
+                padding: 30px 20px;
+            }
+            .feature-content {
+                padding: 0 !important;
+                margin-bottom: 30px;
+            }
+            .feature-visual {
+                flex: none;
+                width: 100%;
+                max-width: 280px;
+                height: 160px;
+            }
+            .stats-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            .container {
+                padding: 0 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .page-header h1 {
+                font-size: 1.8rem;
+            }
+
+            .feature-card {
+                padding: 25px 15px;
+            }
+
+            .feature-content h3 {
+                font-size: 1.5rem;
+            }
+
+            .cta-section {
+                padding: 40px 20px;
+            }
+
+            .cta-section h2 {
+                font-size: 2rem;
+            }
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--text-primary);
+            color: white;
+            padding: 40px 0;
+            margin-top: 80px;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 40px;
+            margin-bottom: 30px;
+        }
+
+        .footer-brand {
+            margin-bottom: 20px;
+        }
+
+        .footer-logo {
+            font-size: 24px;
+            font-weight: 800;
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .footer-tagline {
+            color: var(--text-tertiary);
+            font-size: 0.9rem;
+        }
+
+        .footer-links {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+        }
+
+        .footer-column h4 {
+            color: white;
+            margin-bottom: 15px;
+            font-weight: 600;
+        }
+
+        .footer-column a {
+            color: var(--text-tertiary);
+            text-decoration: none;
+            display: block;
+            margin-bottom: 8px;
+            transition: color 0.3s;
+        }
+
+        .footer-column a:hover {
+            color: var(--primary);
+        }
+
+        .footer-bottom {
+            text-align: center;
+            padding-top: 30px;
+            border-top: 1px solid #374151;
+            color: var(--text-tertiary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="nav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <a href="index.html" style="text-decoration: none;">
+                    <div class="logo"> <span class="logo-text">vitae</span> </div>
+                </a>
+            </div>
+            <div class="nav-menu">
+                <a href="features.html" class="nav-link">Features</a>
+                <a href="how-it-works.html" class="nav-link">How it works</a>
+                <a href="index.html#pricing" class="nav-link">Pricing</a>
+                <button class="btn btn-primary" onclick="showModal('waitlist')">Start your story</button>
+            </div>
+        </div>
+    </nav>
+
+    <main class="main">
+        <div class="container">
+            <section class="page-header">
+                <h1>Book Features & Specifications</h1>
+                <p>Every Vitae autobiography is crafted with premium materials and attention to detail, creating a lasting legacy that will be treasured for generations.</p>
+            </section>
+
+            <section class="features-section">
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="0">
+                    <div class="feature-content">
+                        <h3>Professional Length & Scope</h3>
+                        <p>Your life story deserves comprehensive coverage. Our books are thoughtfully designed to capture the full richness of your experiences while maintaining engaging readability.</p>
+                        <ul class="feature-specs">
+                            <li>150-300 pages average length</li>
+                            <li>25,000-50,000 words of content</li>
+                            <li>Professionally edited and formatted</li>
+                            <li>Custom chapter organization</li>
+                            <li>Timeline integration throughout</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-icon">📖</div>
+                        <div class="floating-elements">
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="200">
+                    <div class="feature-content">
+                        <h3>Premium Print Quality</h3>
+                        <p>Museum-quality materials ensure your book will last for decades. Every page is printed with archival inks on acid-free paper, bound with the finest craftsmanship.</p>
+                        <ul class="feature-specs">
+                            <li>Hardcover binding with dust jacket</li>
+                            <li>Premium 80gsm cream-colored paper</li>
+                            <li>Archival quality printing inks</li>
+                            <li>Sewn binding for durability</li>
+                            <li>Protective slip case available</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-icon">✨</div>
+                        <div class="floating-elements">
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="400">
+                    <div class="feature-content">
+                        <h3>Beautiful Photo Integration</h3>
+                        <p>Your memories come alive with professional photo restoration and integration. We seamlessly weave your family photos throughout the narrative for a rich, visual storytelling experience.</p>
+                        <ul class="feature-specs">
+                            <li>Up to 100 family photos included</li>
+                            <li>Professional photo restoration service</li>
+                            <li>Custom photo layouts and captions</li>
+                            <li>High-resolution printing (300 DPI)</li>
+                            <li>Digital photo scanning service</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-icon">📸</div>
+                        <div class="floating-elements">
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="600">
+                    <div class="feature-content">
+                        <h3>Custom Design Options</h3>
+                        <p>Choose from our collection of elegant design templates or work with our designers to create a completely custom look that reflects your personality and style.</p>
+                        <ul class="feature-specs">
+                            <li>5 professional design templates</li>
+                            <li>Custom typography and layout</li>
+                            <li>Personalized cover design</li>
+                            <li>Family crest or logo integration</li>
+                            <li>Color scheme customization</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-icon">🎨</div>
+                        <div class="floating-elements">
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="feature-card" data-aos="fade-up" data-aos-delay="800">
+                    <div class="feature-content">
+                        <h3>Digital Legacy Package</h3>
+                        <p>In addition to your printed book, receive digital versions for easy sharing with family around the world. Your story lives on in multiple formats for maximum accessibility.</p>
+                        <ul class="feature-specs">
+                            <li>PDF version for digital sharing</li>
+                            <li>EPUB format for e-readers</li>
+                            <li>Interactive online version</li>
+                            <li>Audio narration available</li>
+                            <li>Cloud storage and backup</li>
+                        </ul>
+                    </div>
+                    <div class="feature-visual">
+                        <div class="feature-icon">💻</div>
+                        <div class="floating-elements">
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                            <div class="floating-element"></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="stats-section" data-aos="fade-up">
+                <h2>Book Specifications at a Glance</h2>
+                <div class="stats-grid">
+                    <div class="stat-card" data-aos="fade-up" data-aos-delay="0">
+                        <div class="stat-number">250</div>
+                        <div class="stat-label">Average Pages</div>
+                        <div class="stat-description">Comprehensive life coverage</div>
+                    </div>
+                    <div class="stat-card" data-aos="fade-up" data-aos-delay="100">
+                        <div class="stat-number">8.5"×11"</div>
+                        <div class="stat-label">Book Dimensions</div>
+                        <div class="stat-description">Coffee table book size</div>
+                    </div>
+                    <div class="stat-card" data-aos="fade-up" data-aos-delay="200">
+                        <div class="stat-number">75+</div>
+                        <div class="stat-label">Photos Included</div>
+                        <div class="stat-description">Restored & enhanced</div>
+                    </div>
+                    <div class="stat-card" data-aos="fade-up" data-aos-delay="300">
+                        <div class="stat-number">100</div>
+                        <div class="stat-label">Year Guarantee</div>
+                        <div class="stat-description">Archival quality materials</div>
+                    </div>
+                </div>
+            </section>
+
+            <section class="cta-section" data-aos="fade-up" data-aos-delay="600">
+                <h2>Ready to Create Your Legacy?</h2>
+                <p>Every detail of your book is designed to honor your life story. Let us help you create a beautiful, lasting tribute that your family will treasure forever.</p>
+                <button class="btn btn-primary btn-large" onclick="showModal('waitlist')">Start Your Story Today</button>
+            </section>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="footer-logo">vitae</div>
+                    <p class="footer-tagline">Preserving stories, creating legacies</p>
+                </div>
+                <div class="footer-links">
+                    <div class="footer-column">
+                        <h4>Product</h4>
+                        <a href="features.html">Features</a>
+                        <a href="how-it-works.html">How it works</a>
+                        <a href="index.html#pricing">Pricing</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Company</h4>
+                        <a href="#about">About</a>
+                        <a href="#careers">Careers</a>
+                        <a href="#contact">Contact</a>
+                    </div>
+                    <div class="footer-column">
+                        <h4>Legal</h4>
+                        <a href="#privacy">Privacy</a>
+                        <a href="#terms">Terms</a>
+                        <a href="#security">Security</a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Vitae. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Include the main script for modal functionality -->
+    <script src="script.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+    <script>
+        AOS.init({
+            duration: 800,
+            once: true,
+            offset: 100
+        });
+    </script>
+</body>
+</html> 
