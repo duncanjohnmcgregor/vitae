@@ -116,111 +116,108 @@ function animateFloatingElements() {
     });
 }
 
-// Testimonial swap functionality
+// Hero testimonials cycling functionality (5 second intervals)
 function initTestimonialCarousel() {
-    const swapBtn = document.querySelector('.testimonials-swap-btn');
-    const testimonialCards = document.querySelectorAll('.testimonials-grid .testimonial-card');
+    const heroTestimonialCards = document.querySelectorAll('.hero-testimonials-container .testimonial-card');
     
-    if (!swapBtn || testimonialCards.length !== 3) return;
+    if (heroTestimonialCards.length !== 3) return;
 
-    // Complete pool of testimonials
+    // Complete pool of testimonials for cycling
     const testimonialPool = [
         {
-            content: "Vitae helped me preserve stories I never would have thought to share. My grandchildren will know their heritage because of this beautiful book.",
-            name: "Sarah Johnson",
-            role: "Grandmother of 5",
+            name: "Margaret Thompson",
+            age: 82,
+            text: "My grandkids always ask about my life. They want to know what it was like growing up on the farm. I've always wanted to write my stories down for them. With some help, I did it. Now it's not just about the past. It's about giving them something to remember me by.",
             avatar: ""
         },
         {
-            content: "The questions were so thoughtful. It felt like talking to a dear friend who genuinely wanted to know my story.",
-            name: "Robert Chen",
-            role: "Retired teacher",
+            name: "Harold Williams",
+            age: 79,
+            text: "After my wife died, I had too many thoughts in my head. I've wanted to write my story for a long time. It started as something to do, but with help, it became more. I remembered the good times, like our trips, and the hard times, like my mistakes.",
             avatar: "avatar-2"
         },
         {
-            content: "I gave this to my children as a gift. They said it was the most meaningful present they've ever received.",
-            name: "Maria Rodriguez",
-            role: "Mother of 3",
+            name: "Eleanor Martinez",
+            age: 76,
+            text: "I have a big family, but we're spread out now. I've always wanted to write my life story to bring us closer together. With some help, I got it done. Sharing stories about growing up in Brooklyn got everyone talking.",
             avatar: "avatar-3"
         },
         {
-            content: "I was worried about technology, but the process was so simple. Now I have a beautiful book to pass down to my family.",
             name: "Dorothy Williams",
-            role: "Great-grandmother",
+            age: 85,
+            text: "I was worried about technology, but the process was so simple. Now I have a beautiful book to pass down to my family that captures all my memories from the war years.",
             avatar: "avatar-4"
         },
         {
-            content: "The final book exceeded all my expectations. Every page captures the essence of my father's incredible journey.",
             name: "Michael Thompson",
-            role: "Son and caregiver",
+            age: 68,
+            text: "The final book exceeded all my expectations. Every page captures the essence of my father's incredible journey through the Great Depression.",
             avatar: "avatar-5"
         },
         {
-            content: "Vitae captured stories I thought were lost forever. The writing quality is exceptional and truly honors my experiences.",
             name: "Helen Chang",
-            role: "Artist and writer",
+            age: 74,
+            text: "Vitae captured stories I thought were lost forever. The writing quality is exceptional and truly honors my experiences as an immigrant.",
             avatar: "avatar-6"
         },
         {
-            content: "The team made me feel so comfortable sharing my memories. They truly understood the importance of preserving family history.",
             name: "Frank Morrison",
-            role: "WWII veteran",
+            age: 91,
+            text: "The team made me feel so comfortable sharing my memories. They truly understood the importance of preserving family history for future generations.",
             avatar: "avatar-7"
         },
         {
-            content: "My family is scattered across the country, but this book has brought us all closer together through shared stories.",
             name: "Patricia Davis",
-            role: "Family matriarch",
+            age: 77,
+            text: "My family is scattered across the country, but this book has brought us all closer together through shared stories and memories.",
             avatar: "avatar-8"
         },
         {
-            content: "I never thought my stories mattered, but Vitae showed me they do. Now my grandkids ask to read 'Grandpa's book' every visit.",
             name: "James Peterson",
-            role: "Retired engineer",
+            age: 83,
+            text: "I never thought my stories mattered, but Vitae showed me they do. Now my grandkids ask to read 'Grandpa's book' every visit.",
             avatar: "avatar-9"
         },
         {
-            content: "The quality of the final book is museum-worthy. It's a treasure that will be passed down for generations to come.",
             name: "Elizabeth Foster",
-            role: "Librarian and mother",
+            age: 72,
+            text: "The quality of the final book is museum-worthy. It's a treasure that will be passed down for generations to come.",
             avatar: "avatar-10"
         }
     ];
 
     let currentSetIndex = 0;
-    const testimonialsPerSet = 3;
     
     function getNextTestimonialSet() {
-        // Calculate next set starting index
-        const nextStartIndex = ((currentSetIndex + 1) * testimonialsPerSet) % testimonialPool.length;
-        currentSetIndex = (currentSetIndex + 1) % Math.floor(testimonialPool.length / testimonialsPerSet);
-        
-        // Get next 3 testimonials
+        // Get next 3 testimonials, cycling through the pool
+        const startIndex = (currentSetIndex * 3) % testimonialPool.length;
         const nextSet = [];
-        for (let i = 0; i < testimonialsPerSet; i++) {
-            const testimonialIndex = (nextStartIndex + i) % testimonialPool.length;
+        
+        for (let i = 0; i < 3; i++) {
+            const testimonialIndex = (startIndex + i) % testimonialPool.length;
             nextSet.push(testimonialPool[testimonialIndex]);
         }
         
+        currentSetIndex = (currentSetIndex + 1) % Math.ceil(testimonialPool.length / 3);
         return nextSet;
     }
     
     function updateTestimonialCard(card, testimonial, delay = 0) {
         setTimeout(() => {
-            // Add swapping out animation
-            card.classList.add('swapping-out');
+            // Add fade out class
+            card.classList.add('fade-out');
             
-            // After animation, update content and animate in
+            // After fade out, update content and fade back in
             setTimeout(() => {
                 // Update content
-                const contentP = card.querySelector('.testimonial-content p');
-                const nameDiv = card.querySelector('.author-name');
-                const roleDiv = card.querySelector('.author-role');
-                const avatar = card.querySelector('.author-avatar');
+                const nameElement = card.querySelector('.testimonial-name');
+                const ageElement = card.querySelector('.testimonial-age');
+                const textElement = card.querySelector('.testimonial-text');
+                const avatar = card.querySelector('.avatar');
                 
-                if (contentP) contentP.textContent = `"${testimonial.content}"`;
-                if (nameDiv) nameDiv.textContent = testimonial.name;
-                if (roleDiv) roleDiv.textContent = testimonial.role;
+                if (nameElement) nameElement.textContent = testimonial.name;
+                if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;
+                if (textElement) textElement.textContent = `"${testimonial.text}"`;
                 
                 // Update avatar class
                 if (avatar) {
@@ -231,38 +228,32 @@ function initTestimonialCarousel() {
                     }
                 }
                 
-                // Remove swapping out class and add swapping in
-                card.classList.remove('swapping-out');
-                card.classList.add('swapping-in');
+                // Remove fade out and add fade in
+                card.classList.remove('fade-out');
+                card.classList.add('fade-in');
                 
-                // Clean up animation class after completion
+                // Clean up fade in class after animation
                 setTimeout(() => {
-                    card.classList.remove('swapping-in');
-                }, 600);
+                    card.classList.remove('fade-in');
+                }, 500);
                 
-            }, 300); // Wait for swapping-out animation
+            }, 250); // Wait for fade-out animation
         }, delay);
     }
     
-    // Swap button click handler
-    swapBtn.addEventListener('click', () => {
+    function cycleTestimonials() {
         const nextTestimonials = getNextTestimonialSet();
         
-        // Disable button temporarily to prevent rapid clicking
-        swapBtn.style.pointerEvents = 'none';
-        
         // Update each testimonial card with staggered timing
-        testimonialCards.forEach((card, index) => {
-            updateTestimonialCard(card, nextTestimonials[index], index * 100);
+        heroTestimonialCards.forEach((card, index) => {
+            updateTestimonialCard(card, nextTestimonials[index], index * 150);
         });
-        
-        // Re-enable button after animations complete
-        setTimeout(() => {
-            swapBtn.style.pointerEvents = 'auto';
-        }, 1200);
-    });
-
-    console.log('✅ Testimonial swap functionality initialized');
+    }
+    
+    // Start cycling every 5 seconds
+    setInterval(cycleTestimonials, 5000);
+    
+    console.log('✅ Hero testimonials cycling initialized - every 5 seconds');
 }
 
 // Hero testimonials cycling system
