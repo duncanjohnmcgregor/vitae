@@ -87,3 +87,5 @@ $RECYCLE.BIN/
 # GCP credentials
 *.json
 service-account-key.json 
+# Service account key file (never commit!)
+github-actions-key.json

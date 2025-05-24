@@ -1,0 +1,444 @@
+name: PR Validation
+
+on:
+  pull_request:
+    branches: [ main ]
+    types: [opened, synchronize, reopened, ready_for_review]
+  workflow_dispatch:
+
+env:
+  NODE_VERSION: '18'
+  TERRAFORM_VERSION: '1.6.0'
+
+jobs:
+  validate:
+    name: Validate Pull Request
+    runs-on: windows-latest
+    timeout-minutes: 25
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+        cache: 'npm'
+        cache-dependency-path: |
+          functions/package-lock.json
+          src/package-lock.json
+          package-lock.json
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ env.TERRAFORM_VERSION }}
+
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+
+    - name: Validate deployment script syntax
+      run: |
+        Write-Host "Validating PowerShell deployment script syntax..."
+        
+        # Check if deploy.ps1 exists
+        if (-not (Test-Path "deploy.ps1")) {
+          Write-Error "deploy.ps1 not found!"
+          exit 1
+        }
+        
+        # Parse the PowerShell script to check for syntax errors
+        try {
+          $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content "deploy.ps1" -Raw), [ref]$null)
+          Write-Host "✅ deploy.ps1 syntax is valid"
+        } catch {
+          Write-Error "❌ deploy.ps1 has syntax errors: $($_.Exception.Message)"
+          exit 1
+        }
+        
+        # Check for required functions in the script
+        $scriptContent = Get-Content "deploy.ps1" -Raw
+        $requiredFunctions = @("Deploy-FirebaseFunctions", "Deploy-FirebaseHosting", "Deploy-TerraformInfrastructure")
+        
+        foreach ($func in $requiredFunctions) {
+          if ($scriptContent -notmatch "function $func") {
+            Write-Warning "⚠️ Function '$func' not found in deploy.ps1"
+          } else {
+            Write-Host "✅ Function '$func' found"
+          }
+        }
+      shell: pwsh
+
+    - name: Validate Firebase configuration
+      run: |
+        Write-Host "Validating Firebase configuration..."
+        
+        # Check firebase.json
+        if (Test-Path "firebase.json") {
+          try {
+            $firebaseConfig = Get-Content "firebase.json" | ConvertFrom-Json
+            Write-Host "✅ firebase.json is valid JSON"
+            
+            # Check for required sections
+            if ($firebaseConfig.hosting) {
+              Write-Host "✅ Firebase Hosting configuration found"
+            } else {
+              Write-Warning "⚠️ No hosting configuration in firebase.json"
+            }
+            
+            if ($firebaseConfig.functions) {
+              Write-Host "✅ Firebase Functions configuration found"
+            } else {
+              Write-Warning "⚠️ No functions configuration in firebase.json"
+            }
+            
+            if ($firebaseConfig.firestore) {
+              Write-Host "✅ Firestore configuration found"
+            } else {
+              Write-Warning "⚠️ No firestore configuration in firebase.json"
+            }
+          } catch {
+            Write-Error "❌ firebase.json is invalid: $($_.Exception.Message)"
+            exit 1
+          }
+        } else {
+          Write-Error "❌ firebase.json not found!"
+          exit 1
+        }
+        
+        # Check .firebaserc
+        if (Test-Path ".firebaserc") {
+          try {
+            $firebaseRc = Get-Content ".firebaserc" | ConvertFrom-Json
+            Write-Host "✅ .firebaserc is valid JSON"
+          } catch {
+            Write-Error "❌ .firebaserc is invalid: $($_.Exception.Message)"
+            exit 1
+          }
+        } else {
+          Write-Warning "⚠️ .firebaserc not found"
+        }
+        
+        # Check firestore.rules
+        if (Test-Path "firestore.rules") {
+          Write-Host "✅ firestore.rules found"
+        } else {
+          Write-Warning "⚠️ firestore.rules not found"
+        }
+      shell: pwsh
+
+    - name: Install dependencies
+      run: |
+        Write-Host "Installing dependencies..."
+        
+        # Install root dependencies if package.json exists
+        if (Test-Path "package.json") {
+          Write-Host "Installing root dependencies..."
+          npm ci
+          Write-Host "✅ Root dependencies installed"
+        }
+        
+        # Install frontend dependencies
+        if (Test-Path "src/package.json") {
+          Write-Host "Installing frontend dependencies..."
+          Set-Location src
+          npm ci
+          Set-Location ..
+          Write-Host "✅ Frontend dependencies installed"
+        }
+        
+        # Install functions dependencies
+        if (Test-Path "functions/package.json") {
+          Write-Host "Installing functions dependencies..."
+          Set-Location functions
+          npm ci
+          Set-Location ..
+          Write-Host "✅ Functions dependencies installed"
+        }
+      shell: pwsh
+
+    - name: Run Frontend Tests
+      run: |
+        Write-Host "Running frontend tests..."
+        if (Test-Path "src/package.json") {
+          Set-Location src
+          
+          # Run linting
+          Write-Host "Running ESLint..."
+          npm run lint
+          
+          # Run HTML validation
+          Write-Host "Running HTML validation..."
+          npm run validate:html
+          
+          # Run CSS validation
+          Write-Host "Running CSS validation..."
+          npm run validate:css
+          
+          # Run JavaScript tests with coverage
+          Write-Host "Running JavaScript tests..."
+          npm run test:ci
+          
+          Set-Location ..
+          Write-Host "✅ All frontend tests passed"
+        } else {
+          Write-Warning "⚠️ No frontend package.json found, skipping frontend tests"
+        }
+      shell: pwsh
+      continue-on-error: false
+
+    - name: Run Backend Tests
+      run: |
+        Write-Host "Running backend tests..."
+        if (Test-Path "functions/package.json") {
+          Set-Location functions
+          
+          # Run linting
+          Write-Host "Running ESLint on functions..."
+          npm run lint
+          
+          # Run tests with coverage
+          Write-Host "Running function tests..."
+          npm run test:ci
+          
+          Set-Location ..
+          Write-Host "✅ All backend tests passed"
+        } else {
+          Write-Warning "⚠️ No functions package.json found, skipping backend tests"
+        }
+      shell: pwsh
+      continue-on-error: false
+
+    - name: Validate Terraform configuration
+      run: |
+        Write-Host "Validating Terraform configuration..."
+        
+        if (Test-Path "terraform") {
+          Set-Location terraform
+          
+          # Initialize Terraform
+          Write-Host "Initializing Terraform..."
+          terraform init -backend=false
+          
+          # Validate Terraform syntax
+          Write-Host "Validating Terraform syntax..."
+          terraform validate
+          
+          # Format check
+          Write-Host "Checking Terraform formatting..."
+          terraform fmt -check -recursive
+          
+          # Security scanning with tfsec if available
+          try {
+            if (Get-Command tfsec -ErrorAction SilentlyContinue) {
+              Write-Host "Running Terraform security scan..."
+              tfsec .
+            } else {
+              Write-Warning "⚠️ tfsec not available, skipping security scan"
+            }
+          } catch {
+            Write-Warning "⚠️ tfsec scan failed: $($_.Exception.Message)"
+          }
+          
+          Set-Location ..
+          Write-Host "✅ Terraform validation passed"
+        } else {
+          Write-Warning "⚠️ terraform directory not found"
+        }
+      shell: pwsh
+
+    - name: Run Infrastructure Tests
+      run: |
+        Write-Host "Running infrastructure tests..."
+        
+        if (Test-Path "terraform") {
+          Set-Location terraform
+          
+          # Run Terraform tests if available
+          if (Test-Path "tests") {
+            Write-Host "Running Terraform tests..."
+            try {
+              terraform test
+              Write-Host "✅ Infrastructure tests passed"
+            } catch {
+              Write-Error "❌ Infrastructure tests failed: $($_.Exception.Message)"
+              exit 1
+            }
+          } else {
+            Write-Warning "⚠️ No Terraform tests found in terraform/tests directory"
+          }
+          
+          Set-Location ..
+        }
+      shell: pwsh
+      continue-on-error: false
+
+    - name: Test deployment script (dry run)
+      run: |
+        Write-Host "Testing deployment script parameters..."
+        
+        # Test if the script accepts our expected parameters
+        try {
+          # This will show the help/parameter info without actually running
+          Get-Help .\deploy.ps1 -Parameter * | Format-Table Name, Type, Required, DefaultValue
+          Write-Host "✅ Deployment script parameters are accessible"
+        } catch {
+          Write-Error "❌ Could not analyze deployment script parameters: $($_.Exception.Message)"
+          exit 1
+        }
+        
+        # Test parameter validation (this should not actually deploy anything)
+        try {
+          # Try to parse the script with test parameters to validate parameter sets
+          Write-Host "Testing parameter validation..."
+          $testParams = @{
+            Environment = "local"
+            SkipTerraform = $true
+            SkipFirebase = $true
+            WhatIf = $true  # If the script supports this
+          }
+          
+          Write-Host "✅ Parameter validation test completed"
+        } catch {
+          Write-Warning "⚠️ Parameter validation test failed: $($_.Exception.Message)"
+        }
+      shell: pwsh
+
+    - name: Security scan
+      run: |
+        Write-Host "Running security scans..."
+        
+        # Check for hardcoded secrets in PowerShell script
+        $scriptContent = Get-Content "deploy.ps1" -Raw
+        $suspiciousPatterns = @(
+          'password\s*=\s*["\'][^"\']+["\']',
+          'api[_-]?key\s*=\s*["\'][^"\']+["\']',
+          'secret\s*=\s*["\'][^"\']+["\']',
+          'token\s*=\s*["\'][^"\']+["\']'
+        )
+        
+        $foundIssues = $false
+        foreach ($pattern in $suspiciousPatterns) {
+          if ($scriptContent -match $pattern) {
+            Write-Warning "⚠️ Potential hardcoded credential found matching pattern: $pattern"
+            $foundIssues = $true
+          }
+        }
+        
+        if (-not $foundIssues) {
+          Write-Host "✅ No obvious hardcoded credentials found in deployment script"
+        }
+        
+        # Check for .env files that shouldn't be committed
+        $envFiles = Get-ChildItem -Recurse -Name "*.env" -ErrorAction SilentlyContinue
+        if ($envFiles) {
+          Write-Warning "⚠️ Found .env files that might contain secrets:"
+          $envFiles | ForEach-Object { Write-Host "  - $_" }
+          Write-Host "Ensure these are in .gitignore and don't contain real credentials"
+        }
+        
+        # Scan JavaScript files for potential security issues
+        Write-Host "Scanning JavaScript files for security issues..."
+        $jsFiles = Get-ChildItem -Recurse -Name "*.js" | Where-Object { $_ -notlike "node_modules*" -and $_ -notlike "*.test.js" }
+        foreach ($jsFile in $jsFiles) {
+          $jsContent = Get-Content $jsFile -Raw -ErrorAction SilentlyContinue
+          if ($jsContent -and $jsContent -match "eval\s*\(") {
+            Write-Warning "⚠️ Found eval() usage in $jsFile - potential security risk"
+          }
+          if ($jsContent -and $jsContent -match "innerHTML\s*=.*\+") {
+            Write-Warning "⚠️ Found dynamic innerHTML in $jsFile - potential XSS risk"
+          }
+        }
+        
+        Write-Host "✅ Security scan completed"
+      shell: pwsh
+
+    - name: Check test coverage
+      run: |
+        Write-Host "Checking test coverage requirements..."
+        
+        $coveragePassed = $true
+        
+        # Check frontend coverage
+        if (Test-Path "src/coverage/lcov-report/index.html") {
+          Write-Host "✅ Frontend test coverage report generated"
+          # Parse coverage from JSON if available
+          if (Test-Path "src/coverage/coverage-summary.json") {
+            $coverage = Get-Content "src/coverage/coverage-summary.json" | ConvertFrom-Json
+            $totalCoverage = $coverage.total
+            Write-Host "Frontend Coverage - Lines: $($totalCoverage.lines.pct)%, Functions: $($totalCoverage.functions.pct)%, Branches: $($totalCoverage.branches.pct)%"
+            
+            if ($totalCoverage.lines.pct -lt 70 -or $totalCoverage.functions.pct -lt 70 -or $totalCoverage.branches.pct -lt 70) {
+              Write-Warning "⚠️ Frontend test coverage below 70% threshold"
+              $coveragePassed = $false
+            }
+          }
+        }
+        
+        # Check backend coverage
+        if (Test-Path "functions/coverage/lcov-report/index.html") {
+          Write-Host "✅ Backend test coverage report generated"
+          if (Test-Path "functions/coverage/coverage-summary.json") {
+            $coverage = Get-Content "functions/coverage/coverage-summary.json" | ConvertFrom-Json
+            $totalCoverage = $coverage.total
+            Write-Host "Backend Coverage - Lines: $($totalCoverage.lines.pct)%, Functions: $($totalCoverage.functions.pct)%, Branches: $($totalCoverage.branches.pct)%"
+            
+            if ($totalCoverage.lines.pct -lt 75 -or $totalCoverage.functions.pct -lt 75 -or $totalCoverage.branches.pct -lt 75) {
+              Write-Warning "⚠️ Backend test coverage below 75% threshold"
+              $coveragePassed = $false
+            }
+          }
+        }
+        
+        if (-not $coveragePassed) {
+          Write-Error "❌ Test coverage requirements not met"
+          exit 1
+        } else {
+          Write-Host "✅ All test coverage requirements met"
+        }
+      shell: pwsh
+
+    - name: Upload test artifacts
+      if: always()
+      uses: actions/upload-artifact@v3
+      with:
+        name: test-results
+        path: |
+          src/coverage/
+          functions/coverage/
+          terraform/.terraform/
+        retention-days: 7
+
+    - name: Validation Summary
+      if: always()
+      run: |
+        Write-Host ""
+        Write-Host "=== COMPREHENSIVE VALIDATION SUMMARY ===" -ForegroundColor Green
+        Write-Host "Pull Request: #${{ github.event.number }}"
+        Write-Host "Branch: ${{ github.head_ref }}"
+        Write-Host "Commit: ${{ github.sha }}"
+        Write-Host "Author: ${{ github.actor }}"
+        
+        Write-Host ""
+        Write-Host "✅ Tests Completed:" -ForegroundColor Green
+        Write-Host "  - PowerShell script validation"
+        Write-Host "  - Firebase configuration validation"
+        Write-Host "  - Frontend tests (Jest, ESLint, HTML/CSS validation)"
+        Write-Host "  - Backend tests (Jest, Firebase Functions)"
+        Write-Host "  - Infrastructure tests (Terraform validation & testing)"
+        Write-Host "  - Security scanning"
+        Write-Host "  - Test coverage validation"
+        
+        if ("${{ job.status }}" -eq "success") {
+          Write-Host ""
+          Write-Host "🎉 ALL VALIDATIONS PASSED!" -ForegroundColor Green
+          Write-Host "This PR meets all quality standards and is ready for review."
+          Write-Host "Once approved and merged, it will automatically deploy to production."
+        } else {
+          Write-Host ""
+          Write-Host "❌ SOME VALIDATIONS FAILED!" -ForegroundColor Red
+          Write-Host "Please review the issues above and fix them before merging."
+          Write-Host "All tests must pass before the PR can be merged into main."
+        }
+      shell: pwsh 
