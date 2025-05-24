@@ -1,0 +1,13 @@
+﻿{
+  "name": "waitlist-function",
+  "version": "1.0.0",
+  "description": "Waitlist submission Cloud Function",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^6.0.0",
+    "cors": "^2.8.5"
+  }
+}

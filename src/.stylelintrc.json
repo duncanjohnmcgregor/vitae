@@ -1,0 +1,41 @@
+{
+  "extends": ["stylelint-config-standard"],
+  "rules": {
+    "alpha-value-notation": "number",
+    "color-function-notation": "legacy",
+    "selector-class-pattern": null,
+    "custom-property-pattern": null,
+    "declaration-block-no-redundant-longhand-properties": true,
+    "font-family-no-missing-generic-family-keyword": true,
+    "function-calc-no-unspaced-operator": true,
+    "no-duplicate-selectors": true,
+    "no-empty-source": null,
+    "property-no-unknown": true,
+    "selector-pseudo-class-no-unknown": true,
+    "selector-pseudo-element-no-unknown": true,
+    "selector-type-no-unknown": true,
+    "unit-no-unknown": true,
+    "at-rule-no-unknown": [
+      true,
+      {
+        "ignoreAtRules": [
+          "tailwind",
+          "apply",
+          "variants",
+          "responsive",
+          "screen"
+        ]
+      }
+    ],
+    "declaration-block-trailing-semicolon": "always",
+    "indentation": 2,
+    "max-empty-lines": 2,
+    "rule-empty-line-before": [
+      "always-multi-line",
+      {
+        "except": ["first-nested"],
+        "ignore": ["after-comment"]
+      }
+    ]
+  }
+} 

@@ -1,0 +1,43 @@
+{
+  "extends": ["html-validate:recommended"],
+  "rules": {
+    "void-style": "omit",
+    "close-order": "error",
+    "doctype-html": "error",
+    "heading-level": "error",
+    "meta-refresh": "error",
+    "no-raw-characters": "error",
+    "script-type": "off",
+    "svg-focusable": "error",
+    "wcag/h30": "error",
+    "wcag/h32": "error",
+    "wcag/h36": "error",
+    "wcag/h37": "error",
+    "element-required-attributes": "error",
+    "element-permitted-content": "error",
+    "element-permitted-occurrences": "error",
+    "element-permitted-order": "error",
+    "element-required-ancestors": "error",
+    "element-required-content": "error",
+    "form-dup-name": "error",
+    "input-missing-label": "error",
+    "missing-doctype": "error",
+    "no-autoplay": "error",
+    "no-deprecated-attr": "error",
+    "no-dup-attr": "error",
+    "no-dup-id": "error",
+    "no-missing-references": "error",
+    "no-redundant-for": "error",
+    "no-redundant-role": "error",
+    "no-unknown-elements": "error",
+    "prefer-native-element": "error",
+    "require-sri": "off",
+    "tel-non-breaking": "error",
+    "unrecognized-char-ref": "error",
+    "valid-autocomplete": "error",
+    "void-content": "error"
+  },
+  "elements": [
+    "html5"
+  ]
+} 
