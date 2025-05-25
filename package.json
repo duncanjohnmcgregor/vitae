@@ -1,6 +1,10 @@
 {
-  "dependencies": {
-    "node-fetch": "^2.7.0",
-    "firebase-tools": "^13.0.0"
-  }
+  "name": "vitae-website",
+  "version": "1.0.0",
+  "description": "Vitae landing page and waitlist",
+  "scripts": {
+    "dev": "firebase emulators:start",
+    "deploy": "firebase deploy"
+  },
+  "private": true
 }

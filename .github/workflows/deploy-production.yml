@@ -32,9 +32,7 @@ jobs:
       with:
         node-version: ${{ env.NODE_VERSION }}
         cache: 'npm'
-        cache-dependency-path: |
-          package-lock.json
-          functions/package-lock.json
+        cache-dependency-path: 'functions/package-lock.json'
 
     - name: Authenticate to Google Cloud
       id: auth
@@ -42,11 +40,11 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Install Root Dependencies
+    - name: Install Firebase CLI
       run: |
-        echo "Installing root dependencies (including Firebase CLI)..."
-        npm ci --prefer-offline --no-audit --no-fund --silent
-        echo "✅ Root dependencies installed"
+        echo "Installing Firebase CLI globally..."
+        npm install -g firebase-tools
+        echo "✅ Firebase CLI installed"
 
     - name: Install Functions Dependencies  
       run: |
@@ -59,7 +57,7 @@ jobs:
     - name: Set Firebase Project
       run: |
         echo "Setting Firebase project to ${{ secrets.GCP_PROJECT_ID }}..."
-        npx firebase use ${{ secrets.GCP_PROJECT_ID }}
+        firebase use ${{ secrets.GCP_PROJECT_ID }}
         echo "✅ Firebase project configured"
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
@@ -67,7 +65,7 @@ jobs:
     - name: Deploy Firebase Functions
       run: |
         echo "Deploying Firebase Functions..."
-        npx firebase deploy --only functions --project ${{ secrets.GCP_PROJECT_ID }}
+        firebase deploy --only functions --project ${{ secrets.GCP_PROJECT_ID }}
         echo "✅ Firebase Functions deployed"
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
@@ -75,7 +73,7 @@ jobs:
     - name: Deploy Firestore Rules
       run: |
         echo "Deploying Firestore rules..."
-        npx firebase deploy --only firestore:rules --project ${{ secrets.GCP_PROJECT_ID }}
+        firebase deploy --only firestore:rules --project ${{ secrets.GCP_PROJECT_ID }}
         echo "✅ Firestore rules deployed"
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
@@ -83,7 +81,7 @@ jobs:
     - name: Deploy Firebase Hosting
       run: |
         echo "Deploying Firebase Hosting..."
-        npx firebase deploy --only hosting --project ${{ secrets.GCP_PROJECT_ID }}
+        firebase deploy --only hosting --project ${{ secrets.GCP_PROJECT_ID }}
         echo "✅ Firebase Hosting deployed"
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
