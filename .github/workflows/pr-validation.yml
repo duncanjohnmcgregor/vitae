@@ -27,7 +27,6 @@ jobs:
         cache: 'npm'
         cache-dependency-path: |
           functions/package-lock.json
-          src/package-lock.json
           package-lock.json
 
     - name: Setup Terraform
@@ -45,7 +44,11 @@ jobs:
         # Install root dependencies if package.json exists
         if [ -f "package.json" ]; then
           echo "Installing root dependencies..."
-          npm ci
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
           echo "✅ Root dependencies installed"
         fi
         
@@ -53,7 +56,11 @@ jobs:
         if [ -f "src/package.json" ]; then
           echo "Installing frontend dependencies..."
           cd src
-          npm ci
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
           cd ..
           echo "✅ Frontend dependencies installed"
         fi
@@ -62,7 +69,11 @@ jobs:
         if [ -f "functions/package.json" ]; then
           echo "Installing backend dependencies..."
           cd functions
-          npm ci
+          if [ -f "package-lock.json" ]; then
+            npm ci
+          else
+            npm install
+          fi
           cd ..
           echo "✅ Backend dependencies installed"
         fi
@@ -129,20 +140,39 @@ jobs:
         if [ -d "src" ]; then
           cd src
           
+          # Check if node_modules exists
+          if [ ! -d "node_modules" ]; then
+            echo "❌ Frontend dependencies not installed properly"
+            echo "Please run: npm install in the src directory"
+            exit 1
+          fi
+          
           # Run ESLint
           echo "Running ESLint..."
-          npm run lint
-          echo "✅ ESLint passed"
+          if npm run lint; then
+            echo "✅ ESLint passed"
+          else
+            echo "❌ ESLint failed"
+            exit 1
+          fi
           
           # Run HTML validation
           echo "Running HTML validation..."
-          npm run validate:html
-          echo "✅ HTML validation passed"
+          if npm run validate:html; then
+            echo "✅ HTML validation passed"
+          else
+            echo "❌ HTML validation failed"
+            exit 1
+          fi
           
           # Run CSS validation
           echo "Running CSS validation..."
-          npm run validate:css
-          echo "✅ CSS validation passed"
+          if npm run validate:css; then
+            echo "✅ CSS validation passed"
+          else
+            echo "❌ CSS validation failed"
+            exit 1
+          fi
           
           cd ..
         else
@@ -157,9 +187,20 @@ jobs:
         if [ -d "src" ]; then
           cd src
           
+          # Check if node_modules exists
+          if [ ! -d "node_modules" ]; then
+            echo "❌ Frontend dependencies not installed properly"
+            echo "Please run: npm install in the src directory"
+            exit 1
+          fi
+          
           # Run tests with coverage
-          npm run test:ci
-          echo "✅ Frontend tests passed with required coverage"
+          if npm run test:ci; then
+            echo "✅ Frontend tests passed with required coverage"
+          else
+            echo "❌ Frontend tests failed or coverage below threshold"
+            exit 1
+          fi
           
           cd ..
         else
