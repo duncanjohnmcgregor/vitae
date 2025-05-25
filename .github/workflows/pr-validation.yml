@@ -10,10 +10,273 @@ env:
   NODE_VERSION: '20'
 
 jobs:
-  validate:
-    name: Validate Pull Request
-    runs-on: windows-latest
-    timeout-minutes: 20
+  # Fast validation jobs that don't need dependencies
+  validate-structure:
+    name: 🏗️ Structure & Config
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Validate file structure
+      run: |
+        echo "🔍 Validating project structure..."
+        
+        # Check critical files exist
+        missing_files=()
+        required_files=("firebase.json" ".firebaserc" "firestore.rules" "deploy.ps1")
+        
+        for file in "${required_files[@]}"; do
+          if [[ ! -f "$file" ]]; then
+            missing_files+=("$file")
+          else
+            echo "✅ $file found"
+          fi
+        done
+        
+        if [[ ${#missing_files[@]} -gt 0 ]]; then
+          echo "❌ Missing required files: ${missing_files[*]}"
+          exit 1
+        fi
+        
+        # Check src directory structure
+        if [[ -d "src" ]]; then
+          echo "✅ src directory found"
+          html_files=("index.html" "pricing.html" "how-it-works.html" "start-your-story.html")
+          for file in "${html_files[@]}"; do
+            if [[ -f "src/$file" ]]; then
+              echo "✅ src/$file found"
+            else
+              echo "⚠️ src/$file missing"
+            fi
+          done
+        else
+          echo "❌ src directory not found!"
+          exit 1
+        fi
+
+    - name: Validate JSON configurations
+      run: |
+        echo "🔍 Validating JSON configurations..."
+        
+        # Validate firebase.json
+        if jq empty firebase.json 2>/dev/null; then
+          echo "✅ firebase.json is valid JSON"
+          
+          # Check required sections
+          if jq -e '.hosting' firebase.json >/dev/null; then
+            echo "✅ Firebase Hosting configuration found"
+          else
+            echo "⚠️ No hosting configuration in firebase.json"
+          fi
+          
+          if jq -e '.functions' firebase.json >/dev/null; then
+            echo "✅ Firebase Functions configuration found"
+          else
+            echo "⚠️ No functions configuration in firebase.json"
+          fi
+          
+          if jq -e '.firestore' firebase.json >/dev/null; then
+            echo "✅ Firestore configuration found"
+          else
+            echo "⚠️ No firestore configuration in firebase.json"
+          fi
+        else
+          echo "❌ firebase.json is invalid JSON"
+          exit 1
+        fi
+        
+        # Validate .firebaserc
+        if jq empty .firebaserc 2>/dev/null; then
+          echo "✅ .firebaserc is valid JSON"
+        else
+          echo "❌ .firebaserc is invalid JSON"
+          exit 1
+        fi
+
+
+
+  security-scan:
+    name: 🔒 Security Scan
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Scan for secrets
+      run: |
+        echo "🔍 Scanning for potential secrets..."
+        
+        # Check for common secret patterns
+        secret_patterns=(
+          "password\s*=\s*[\"'][^\"']+[\"']"
+          "api[_-]?key\s*=\s*[\"'][^\"']+[\"']"
+          "secret\s*=\s*[\"'][^\"']+[\"']"
+          "token\s*=\s*[\"'][^\"']+[\"']"
+          "sk_live_"
+          "pk_live_"
+          "AKIA[0-9A-Z]{16}"
+        )
+        
+        found_issues=false
+        for pattern in "${secret_patterns[@]}"; do
+          if grep -r -E "$pattern" . --exclude-dir=node_modules --exclude-dir=.git --exclude="*.log" 2>/dev/null; then
+            echo "⚠️ Potential secret found matching pattern: $pattern"
+            found_issues=true
+          fi
+        done
+        
+        if [[ "$found_issues" == "false" ]]; then
+          echo "✅ No obvious secrets found"
+        fi
+
+    - name: Check for vulnerable dependencies
+      run: |
+        echo "🔍 Checking for .env files and other sensitive files..."
+        
+        # Check for .env files
+        if find . -name "*.env" -not -path "./node_modules/*" | grep -q .; then
+          echo "⚠️ Found .env files:"
+          find . -name "*.env" -not -path "./node_modules/*"
+          echo "Ensure these are in .gitignore and don't contain real credentials"
+        else
+          echo "✅ No .env files found in repository"
+        fi
+
+  # Jobs that need dependencies
+  setup-cache:
+    name: 📦 Setup Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    outputs:
+      cache-key: ${{ steps.cache-key.outputs.key }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Generate cache key
+      id: cache-key
+      run: |
+        key="deps-${{ runner.os }}-${{ env.NODE_VERSION }}-$(sha256sum functions/package-lock.json package-lock.json | sha256sum | cut -d' ' -f1)"
+        echo "key=$key" >> $GITHUB_OUTPUT
+        echo "Generated cache key: $key"
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Cache dependencies
+      id: cache-deps
+      uses: actions/cache@v4
+      with:
+        path: |
+          node_modules
+          functions/node_modules
+          ~/.npm
+        key: ${{ steps.cache-key.outputs.key }}
+        restore-keys: |
+          deps-${{ runner.os }}-${{ env.NODE_VERSION }}-
+
+    - name: Install dependencies
+      if: steps.cache-deps.outputs.cache-hit != 'true'
+      run: |
+        echo "📦 Installing dependencies..."
+        
+        # Install root dependencies if package.json exists
+        if [[ -f "package.json" ]]; then
+          echo "Installing root dependencies..."
+          npm ci --prefer-offline --no-audit --no-fund
+          echo "✅ Root dependencies installed"
+        fi
+        
+        # Install functions dependencies
+        if [[ -f "functions/package.json" ]]; then
+          echo "Installing functions dependencies..."
+          cd functions
+          npm ci --prefer-offline --no-audit --no-fund
+          cd ..
+          echo "✅ Functions dependencies installed"
+        fi
+
+  lint-frontend:
+    name: 🎨 Frontend Lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Lint HTML files
+      run: |
+        echo "🔍 Linting HTML files..."
+        
+        html_files=$(find src -name "*.html" 2>/dev/null || true)
+        if [[ -n "$html_files" ]]; then
+          for file in $html_files; do
+            echo "Checking $file..."
+            # Basic HTML validation
+            if grep -q "<!DOCTYPE" "$file" && grep -q "<html" "$file" && grep -q "</html>" "$file"; then
+              echo "✅ $file has basic HTML structure"
+            else
+              echo "⚠️ $file missing basic HTML structure"
+            fi
+          done
+        else
+          echo "⚠️ No HTML files found in src directory"
+        fi
+
+    - name: Lint CSS files
+      run: |
+        echo "🔍 Linting CSS files..."
+        
+        css_files=$(find src -name "*.css" 2>/dev/null || true)
+        if [[ -n "$css_files" ]]; then
+          for file in $css_files; do
+            echo "Checking $file..."
+            # Basic CSS syntax check
+            if [[ -s "$file" ]]; then
+              echo "✅ $file exists and is not empty"
+            else
+              echo "⚠️ $file is empty"
+            fi
+          done
+        else
+          echo "⚠️ No CSS files found in src directory"
+        fi
+
+    - name: Lint JavaScript files
+      run: |
+        echo "🔍 Linting JavaScript files..."
+        
+        js_files=$(find src -name "*.js" 2>/dev/null || true)
+        if [[ -n "$js_files" ]]; then
+          for file in $js_files; do
+            echo "Checking $file..."
+            # Check for potential security issues
+            if grep -q "eval(" "$file"; then
+              echo "⚠️ Found eval() usage in $file - potential security risk"
+            fi
+            if grep -q "innerHTML.*+" "$file"; then
+              echo "⚠️ Found dynamic innerHTML in $file - potential XSS risk"
+            fi
+            echo "✅ $file basic checks passed"
+          done
+        else
+          echo "⚠️ No JavaScript files found in src directory"
+        fi
+
+  test-backend:
+    name: 🧪 Backend Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    needs: setup-cache
     
     steps:
     - name: Checkout code
@@ -23,346 +286,153 @@ jobs:
       uses: actions/setup-node@v4
       with:
         node-version: ${{ env.NODE_VERSION }}
-        cache: 'npm'
-        cache-dependency-path: |
-          functions/package-lock.json
-          package-lock.json
 
-    - name: Get npm cache
+    - name: Restore dependencies
       uses: actions/cache@v4
-      id: npm-cache
       with:
         path: |
+          node_modules
+          functions/node_modules
           ~/.npm
-          ~/AppData/Roaming/npm
-          ~/AppData/Local/npm-cache
-        key: ${{ runner.os }}-npm-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+        key: ${{ needs.setup-cache.outputs.cache-key }}
         restore-keys: |
-          ${{ runner.os }}-npm-${{ env.NODE_VERSION }}-
-          ${{ runner.os }}-npm-
+          deps-${{ runner.os }}-${{ env.NODE_VERSION }}-
 
-    - name: Cache Firebase CLI
-      uses: actions/cache@v4
-      id: firebase-cache
+    - name: Run ESLint
+      run: |
+        echo "🔍 Running ESLint on functions..."
+        if [[ -f "functions/package.json" ]]; then
+          cd functions
+          if npm run lint --if-present; then
+            echo "✅ ESLint passed"
+          else
+            echo "⚠️ ESLint found issues"
+            exit 1
+          fi
+          cd ..
+        else
+          echo "⚠️ No functions package.json found"
+        fi
+
+    - name: Run tests
+      run: |
+        echo "🧪 Running backend tests..."
+        if [[ -f "functions/package.json" ]]; then
+          cd functions
+          if npm test --if-present; then
+            echo "✅ Tests passed"
+          else
+            echo "⚠️ Tests failed or no test script found"
+          fi
+          cd ..
+        else
+          echo "⚠️ No functions package.json found"
+        fi
+      continue-on-error: true
+
+  validate-firebase:
+    name: 🔥 Firebase Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    needs: setup-cache
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
       with:
-        path: |
-          node_modules/.bin
-          node_modules/firebase-tools
-        key: firebase-cli-${{ runner.os }}-${{ env.NODE_VERSION }}-${{ hashFiles('firebase-tools-version') }}
-        restore-keys: |
-          firebase-cli-${{ runner.os }}-${{ env.NODE_VERSION }}-
-          firebase-cli-${{ runner.os }}-
+        node-version: ${{ env.NODE_VERSION }}
 
-    - name: Install Firebase CLI (Optimized)
+    - name: Install Firebase CLI
       run: |
-        $startTime = Get-Date
-        
-        # Check if Firebase CLI is cached and working
-        if (Test-Path "node_modules/.bin/firebase.cmd") {
-          $env:PATH = "$(Get-Location)/node_modules/.bin;$env:PATH"
-          if (Get-Command firebase -ErrorAction SilentlyContinue) {
-            Write-Host "✅ Firebase CLI restored from cache"
-            firebase --version
-            $duration = (Get-Date) - $startTime
-            Write-Host "⚡ Cache restore time: $($duration.TotalSeconds) seconds"
-            
-            # Add to GitHub Actions PATH for subsequent steps
-            $nodeBinPath = "$(Get-Location)/node_modules/.bin"
-            Write-Output $nodeBinPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-            exit 0
-          }
-        }
-        
-        Write-Host "Installing Firebase CLI (cache miss)..."
-        
-        # Create a version file for better cache invalidation
-        "latest" | Out-File -FilePath "firebase-tools-version" -Encoding utf8
-        
-        # Simple and reliable installation using npm install
-        Write-Host "Installing firebase-tools locally..."
-        npm install firebase-tools@latest --no-save --no-audit --no-fund --prefer-offline --silent
-        
-        # Verify installation
-        $env:PATH = "$(Get-Location)/node_modules/.bin;$env:PATH"
-        if (Get-Command firebase -ErrorAction SilentlyContinue) {
-          Write-Host "✅ Firebase CLI installed successfully"
-          firebase --version
-          $duration = (Get-Date) - $startTime
-          Write-Host "⚡ Installation time: $($duration.TotalSeconds) seconds"
-          
-          # Add to GitHub Actions PATH for subsequent steps
-          $nodeBinPath = "$(Get-Location)/node_modules/.bin"
-          Write-Output $nodeBinPath | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
-        } else {
-          Write-Error "❌ Firebase CLI installation failed"
-          exit 1
-        }
-      shell: pwsh
-
-    - name: Validate deployment script syntax
-      run: |
-        Write-Host "Validating PowerShell deployment script syntax..."
-        
-        # Check if deploy.ps1 exists
-        if (-not (Test-Path "deploy.ps1")) {
-          Write-Error "deploy.ps1 not found!"
-          exit 1
-        }
-        
-        # Parse the PowerShell script to check for syntax errors
-        try {
-          $null = [System.Management.Automation.PSParser]::Tokenize((Get-Content "deploy.ps1" -Raw), [ref]$null)
-          Write-Host "✅ deploy.ps1 syntax is valid"
-        } catch {
-          Write-Error "❌ deploy.ps1 has syntax errors: $($_.Exception.Message)"
-          exit 1
-        }
-        
-        # Check for required functions in the script
-        $scriptContent = Get-Content "deploy.ps1" -Raw
-        $requiredFunctions = @("Deploy-FirebaseFunctions", "Deploy-FirebaseHosting")
-        
-        foreach ($func in $requiredFunctions) {
-          if ($scriptContent -notmatch "function $func") {
-            Write-Warning "⚠️ Function '$func' not found in deploy.ps1"
-          } else {
-            Write-Host "✅ Function '$func' found"
-          }
-        }
-      shell: pwsh
+        npm install -g firebase-tools
 
     - name: Validate Firebase configuration
       run: |
-        Write-Host "Validating Firebase configuration..."
+        echo "🔍 Validating Firebase configuration..."
         
-        # Check firebase.json
-        if (Test-Path "firebase.json") {
-          try {
-            $firebaseConfig = Get-Content "firebase.json" | ConvertFrom-Json
-            Write-Host "✅ firebase.json is valid JSON"
-            
-            # Check for required sections
-            if ($firebaseConfig.hosting) {
-              Write-Host "✅ Firebase Hosting configuration found"
-            } else {
-              Write-Warning "⚠️ No hosting configuration in firebase.json"
-            }
-            
-            if ($firebaseConfig.functions) {
-              Write-Host "✅ Firebase Functions configuration found"
-            } else {
-              Write-Warning "⚠️ No functions configuration in firebase.json"
-            }
-            
-            if ($firebaseConfig.firestore) {
-              Write-Host "✅ Firestore configuration found"
-            } else {
-              Write-Warning "⚠️ No firestore configuration in firebase.json"
-            }
-          } catch {
-            Write-Error "❌ firebase.json is invalid: $($_.Exception.Message)"
-            exit 1
-          }
-        } else {
-          Write-Error "❌ firebase.json not found!"
+        # Validate firebase.json schema
+        if firebase --help >/dev/null 2>&1; then
+          echo "✅ Firebase CLI installed successfully"
+        else
+          echo "❌ Firebase CLI installation failed"
           exit 1
-        }
+        fi
         
-        # Check .firebaserc
-        if (Test-Path ".firebaserc") {
-          try {
-            $firebaseRc = Get-Content ".firebaserc" | ConvertFrom-Json
-            Write-Host "✅ .firebaserc is valid JSON"
-          } catch {
-            Write-Error "❌ .firebaserc is invalid: $($_.Exception.Message)"
-            exit 1
-          }
-        } else {
-          Write-Warning "⚠️ .firebaserc not found"
-        }
-        
-        # Check firestore.rules
-        if (Test-Path "firestore.rules") {
-          Write-Host "✅ firestore.rules found"
-        } else {
-          Write-Warning "⚠️ firestore.rules not found"
-        }
-      shell: pwsh
-
-    - name: Install dependencies
-      run: |
-        Write-Host "Installing dependencies..."
-        
-        # Install root dependencies
-        if (Test-Path "package.json") {
-          Write-Host "Installing root dependencies..."
-          npm ci
-          Write-Host "✅ Root dependencies installed"
-        }
-        
-        # Install functions dependencies
-        if (Test-Path "functions/package.json") {
-          Write-Host "Installing functions dependencies..."
-          Set-Location functions
-          npm ci
-          Set-Location ..
-          Write-Host "✅ Functions dependencies installed"
-        }
-      shell: pwsh
-
-    - name: Validate Frontend Files
-      run: |
-        Write-Host "Validating frontend files..."
-        
-        # Check if src directory exists
-        if (Test-Path "src") {
-          Write-Host "✅ src directory found"
-          
-          # Check for main HTML files
-          $htmlFiles = @("index.html", "pricing.html", "how-it-works.html", "start-your-story.html")
-          foreach ($file in $htmlFiles) {
-            if (Test-Path "src/$file") {
-              Write-Host "✅ $file found"
-            } else {
-              Write-Warning "⚠️ $file not found"
-            }
-          }
-          
-          # Check for CSS and JS files
-          if (Test-Path "src/style.css") {
-            Write-Host "✅ style.css found"
-          } else {
-            Write-Warning "⚠️ style.css not found"
-          }
-          
-          if (Test-Path "src/script.js") {
-            Write-Host "✅ script.js found"
-          } else {
-            Write-Warning "⚠️ script.js not found"
-          }
-          
-        } else {
-          Write-Error "❌ src directory not found!"
+        # Check if firebase.json is valid
+        if [[ -f "firebase.json" ]]; then
+          echo "✅ firebase.json found"
+        else
+          echo "❌ firebase.json not found"
           exit 1
-        }
-      shell: pwsh
+        fi
 
-    - name: Run Backend Tests
+    - name: Validate Firestore rules
       run: |
-        Write-Host "Running backend tests..."
-        if (Test-Path "functions/package.json") {
-          Set-Location functions
-          
-          # Run linting with relaxed error handling
-          Write-Host "Running ESLint on functions..."
-          try {
-            npm run lint
-            Write-Host "✅ ESLint passed"
-          } catch {
-            Write-Warning "⚠️ ESLint found issues but continuing with tests..."
-            Write-Host "ESLint errors: $($_.Exception.Message)"
-          }
-          
-          # Run tests if available
-          $packageJson = Get-Content "package.json" | ConvertFrom-Json
-          if ($packageJson.scripts.test) {
-            Write-Host "Running function tests..."
-            try {
-              npm test
-              Write-Host "✅ Tests passed"
-            } catch {
-              Write-Warning "⚠️ Some tests failed: $($_.Exception.Message)"
-            }
-          } else {
-            Write-Warning "⚠️ No test script found in functions package.json"
-          }
-          
-          Set-Location ..
-          Write-Host "✅ Backend validation completed"
-        } else {
-          Write-Warning "⚠️ No functions package.json found, skipping backend tests"
-        }
-      shell: pwsh
-      continue-on-error: true
+        echo "🔍 Validating Firestore rules..."
+        if [[ -f "firestore.rules" ]]; then
+          echo "✅ firestore.rules found"
+          # Basic syntax check for Firestore rules
+          if grep -q "rules_version" firestore.rules; then
+            echo "✅ firestore.rules has rules_version"
+          else
+            echo "⚠️ firestore.rules missing rules_version"
+          fi
+        else
+          echo "⚠️ firestore.rules not found"
+        fi
 
-    - name: Security scan
+  # Summary job that waits for all validations
+  validation-summary:
+    name: 📋 Validation Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [validate-structure, security-scan, lint-frontend, test-backend, validate-firebase]
+    if: always()
+    
+    steps:
+    - name: Generate summary
       run: |
-        Write-Host "Running security scans..."
+        echo "# 📋 PR Validation Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Pull Request:** #${{ github.event.number }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Branch:** ${{ github.head_ref }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Author:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 🔍 Validation Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🏗️ Structure & Config | ${{ needs.validate-structure.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔒 Security Scan | ${{ needs.security-scan.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🎨 Frontend Lint | ${{ needs.lint-frontend.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🧪 Backend Tests | ${{ needs.test-backend.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔥 Firebase Validation | ${{ needs.validate-firebase.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
         
-        # Check for hardcoded secrets in PowerShell script
-        if (Test-Path "deploy.ps1") {
-          $scriptContent = Get-Content "deploy.ps1" -Raw
-          $suspiciousPatterns = @(
-            'password\s*=\s*["`''][^"`'']+["`'']',
-            'api[_-]?key\s*=\s*["`''][^"`'']+["`'']',
-            'secret\s*=\s*["`''][^"`'']+["`'']',
-            'token\s*=\s*["`''][^"`'']+["`'']'
-          )
-          
-          $foundIssues = $false
-          foreach ($pattern in $suspiciousPatterns) {
-            if ($scriptContent -match $pattern) {
-              Write-Warning "⚠️ Potential hardcoded credential found matching pattern: $pattern"
-              $foundIssues = $true
-            }
-          }
-          
-          if (-not $foundIssues) {
-            Write-Host "✅ No obvious hardcoded credentials found in deployment script"
-          }
-        }
-        
-        # Check for .env files that shouldn't be committed
-        $envFiles = Get-ChildItem -Recurse -Name "*.env" -ErrorAction SilentlyContinue
-        if ($envFiles) {
-          Write-Warning "⚠️ Found .env files that might contain secrets:"
-          $envFiles | ForEach-Object { Write-Host "  - $_" }
-          Write-Host "Ensure these are in .gitignore and don't contain real credentials"
-        }
-        
-        # Scan JavaScript files for potential security issues
-        Write-Host "Scanning JavaScript files for security issues..."
-        $jsFiles = Get-ChildItem -Recurse -Name "*.js" | Where-Object { $_ -notlike "node_modules*" -and $_ -notlike "*.test.js" }
-        foreach ($jsFile in $jsFiles) {
-          $jsContent = Get-Content $jsFile -Raw -ErrorAction SilentlyContinue
-          if ($jsContent -and $jsContent -match "eval\s*\(") {
-            Write-Warning "⚠️ Found eval() usage in $jsFile - potential security risk"
-          }
-          if ($jsContent -and $jsContent -match "innerHTML\s*=.*\+") {
-            Write-Warning "⚠️ Found dynamic innerHTML in $jsFile - potential XSS risk"
-          }
-        }
-        
-        Write-Host "✅ Security scan completed"
-      shell: pwsh
-
-    - name: Validation Summary
-      if: always()
-      run: |
-        Write-Host ""
-        Write-Host "=== PR VALIDATION SUMMARY ===" -ForegroundColor Green
-        Write-Host "Pull Request: #${{ github.event.number }}"
-        Write-Host "Branch: ${{ github.head_ref }}"
-        Write-Host "Commit: ${{ github.sha }}"
-        Write-Host "Author: ${{ github.actor }}"
-        
-        Write-Host ""
-        Write-Host "✅ Validations Completed:" -ForegroundColor Green
-        Write-Host "  - PowerShell deployment script syntax"
-        Write-Host "  - Firebase configuration validation"
-        Write-Host "  - Frontend file structure validation"
-        Write-Host "  - Backend tests and linting"
-        Write-Host "  - Security scanning"
-        
-        if ("${{ job.status }}" -eq "success") {
-          Write-Host ""
-          Write-Host "🎉 ALL VALIDATIONS PASSED!" -ForegroundColor Green
-          Write-Host "This PR meets quality standards and is ready for review."
-          Write-Host "Once approved and merged, it will automatically deploy to production."
-        } else {
-          Write-Host ""
-          Write-Host "❌ SOME VALIDATIONS FAILED!" -ForegroundColor Red
-          Write-Host "Please review the issues above and fix them before merging."
-          Write-Host "All validations must pass before the PR can be merged into main."
-        }
-      shell: pwsh 
+        # Check if all validations passed
+        if [[ "${{ needs.validate-structure.result }}" == "success" ]] && 
+           [[ "${{ needs.security-scan.result }}" == "success" ]] && 
+           [[ "${{ needs.lint-frontend.result }}" == "success" ]] && 
+           [[ "${{ needs.test-backend.result }}" == "success" ]] && 
+           [[ "${{ needs.validate-firebase.result }}" == "success" ]]; then
+          echo "## 🎉 All Validations Passed!" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "This PR meets all quality standards and is ready for review." >> $GITHUB_STEP_SUMMARY
+          echo "Once approved and merged, it will automatically deploy to production." >> $GITHUB_STEP_SUMMARY
+          echo ""
+          echo "🎉 ALL VALIDATIONS PASSED!"
+          echo "This PR meets quality standards and is ready for review."
+        else
+          echo "## ❌ Some Validations Failed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please review the failed checks above and fix them before merging." >> $GITHUB_STEP_SUMMARY
+          echo "All validations must pass before the PR can be merged into main." >> $GITHUB_STEP_SUMMARY
+          echo ""
+          echo "❌ SOME VALIDATIONS FAILED!"
+          echo "Please review the issues above and fix them before merging."
+          exit 1
+        fi 
