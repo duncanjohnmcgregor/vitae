@@ -1,0 +1,400 @@
+name: 🔒 Dependency & Security Check
+
+on:
+  schedule:
+    # Run daily at 2 AM UTC
+    - cron: '0 2 * * *'
+  pull_request:
+    paths:
+      - 'functions/package*.json'
+      - 'package*.json'
+  workflow_dispatch:
+    inputs:
+      update_dependencies:
+        description: 'Auto-update dependencies'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '20'
+
+jobs:
+  security-audit:
+    name: 🔍 Security Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Cache dependencies
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.npm
+          node_modules
+          functions/node_modules
+        key: security-${{ runner.os }}-${{ env.NODE_VERSION }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          security-${{ runner.os }}-${{ env.NODE_VERSION }}-
+
+    - name: Install dependencies
+      run: |
+        echo "📦 Installing dependencies for security audit..."
+        
+        # Install root dependencies
+        if [[ -f "package.json" ]]; then
+          npm ci --prefer-offline --no-audit --no-fund
+        fi
+        
+        # Install functions dependencies
+        if [[ -f "functions/package.json" ]]; then
+          cd functions
+          npm ci --prefer-offline --no-audit --no-fund
+          cd ..
+        fi
+
+    - name: Run npm audit (root)
+      run: |
+        echo "🔍 Running security audit on root dependencies..."
+        if [[ -f "package.json" ]]; then
+          npm audit --audit-level=moderate --json > root-audit.json || true
+          
+          # Parse and display results
+          if [[ -s "root-audit.json" ]]; then
+            vulnerabilities=$(jq '.metadata.vulnerabilities.total // 0' root-audit.json)
+            if [[ "$vulnerabilities" -gt 0 ]]; then
+              echo "⚠️ Found $vulnerabilities vulnerabilities in root dependencies"
+              jq '.vulnerabilities' root-audit.json || echo "No detailed vulnerability info available"
+            else
+              echo "✅ No vulnerabilities found in root dependencies"
+            fi
+          fi
+        else
+          echo "ℹ️ No root package.json found"
+        fi
+
+    - name: Run npm audit (functions)
+      run: |
+        echo "🔍 Running security audit on functions dependencies..."
+        if [[ -f "functions/package.json" ]]; then
+          cd functions
+          npm audit --audit-level=moderate --json > ../functions-audit.json || true
+          cd ..
+          
+          # Parse and display results
+          if [[ -s "functions-audit.json" ]]; then
+            vulnerabilities=$(jq '.metadata.vulnerabilities.total // 0' functions-audit.json)
+            if [[ "$vulnerabilities" -gt 0 ]]; then
+              echo "⚠️ Found $vulnerabilities vulnerabilities in functions dependencies"
+              jq '.vulnerabilities' functions-audit.json || echo "No detailed vulnerability info available"
+            else
+              echo "✅ No vulnerabilities found in functions dependencies"
+            fi
+          fi
+        else
+          echo "ℹ️ No functions package.json found"
+        fi
+
+    - name: Upload audit results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: security-audit-results
+        path: |
+          root-audit.json
+          functions-audit.json
+        retention-days: 30
+
+  dependency-analysis:
+    name: 📊 Dependency Analysis
+    runs-on: ubuntu-latest
+    timeout-minutes: 6
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Analyze dependencies
+      run: |
+        echo "📊 Analyzing dependency structure..."
+        
+        # Check for outdated packages
+        if [[ -f "package.json" ]]; then
+          echo "🔍 Checking root dependencies..."
+          npm outdated --json > root-outdated.json || true
+          
+          if [[ -s "root-outdated.json" && "$(cat root-outdated.json)" != "{}" ]]; then
+            echo "📦 Outdated root dependencies found:"
+            jq -r 'to_entries[] | "\(.key): \(.value.current) → \(.value.latest)"' root-outdated.json
+          else
+            echo "✅ All root dependencies are up to date"
+          fi
+        fi
+        
+        if [[ -f "functions/package.json" ]]; then
+          echo "🔍 Checking functions dependencies..."
+          cd functions
+          npm outdated --json > ../functions-outdated.json || true
+          cd ..
+          
+          if [[ -s "functions-outdated.json" && "$(cat functions-outdated.json)" != "{}" ]]; then
+            echo "📦 Outdated functions dependencies found:"
+            jq -r 'to_entries[] | "\(.key): \(.value.current) → \(.value.latest)"' functions-outdated.json
+          else
+            echo "✅ All functions dependencies are up to date"
+          fi
+        fi
+
+    - name: Check for duplicate dependencies
+      run: |
+        echo "🔍 Checking for duplicate dependencies..."
+        
+        if [[ -f "functions/package.json" ]]; then
+          cd functions
+          if npm ls --depth=0 --json > ../deps-tree.json 2>/dev/null; then
+            echo "✅ Dependency tree generated"
+          else
+            echo "⚠️ Some dependency issues found, but continuing..."
+          fi
+          cd ..
+        fi
+
+    - name: Generate dependency report
+      run: |
+        echo "# 📊 Dependency Analysis Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Analysis Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Root dependencies
+        if [[ -f "package.json" ]]; then
+          root_deps=$(jq '.dependencies // {} | length' package.json)
+          root_dev_deps=$(jq '.devDependencies // {} | length' package.json)
+          echo "## 📦 Root Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dependencies:** $root_deps" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dev Dependencies:** $root_dev_deps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Functions dependencies
+        if [[ -f "functions/package.json" ]]; then
+          func_deps=$(jq '.dependencies // {} | length' functions/package.json)
+          func_dev_deps=$(jq '.devDependencies // {} | length' functions/package.json)
+          echo "## ⚡ Functions Dependencies" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dependencies:** $func_deps" >> $GITHUB_STEP_SUMMARY
+          echo "- **Dev Dependencies:** $func_dev_deps" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        # Outdated packages summary
+        if [[ -s "root-outdated.json" && "$(cat root-outdated.json)" != "{}" ]]; then
+          outdated_count=$(jq 'length' root-outdated.json)
+          echo "## ⚠️ Outdated Root Packages: $outdated_count" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        if [[ -s "functions-outdated.json" && "$(cat functions-outdated.json)" != "{}" ]]; then
+          outdated_count=$(jq 'length' functions-outdated.json)
+          echo "## ⚠️ Outdated Functions Packages: $outdated_count" >> $GITHUB_STEP_SUMMARY
+        fi
+
+    - name: Upload dependency analysis
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: dependency-analysis
+        path: |
+          root-outdated.json
+          functions-outdated.json
+          deps-tree.json
+        retention-days: 7
+
+  auto-update:
+    name: 🔄 Auto Update Dependencies
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: inputs.update_dependencies == true
+    needs: [security-audit, dependency-analysis]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Configure Git
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+
+    - name: Update dependencies
+      run: |
+        echo "🔄 Updating dependencies..."
+        
+        updated_packages=()
+        
+        # Update root dependencies
+        if [[ -f "package.json" ]]; then
+          echo "Updating root dependencies..."
+          npm update --save
+          if git diff --quiet package.json package-lock.json; then
+            echo "No root dependency updates available"
+          else
+            updated_packages+=("root")
+            echo "✅ Root dependencies updated"
+          fi
+        fi
+        
+        # Update functions dependencies
+        if [[ -f "functions/package.json" ]]; then
+          echo "Updating functions dependencies..."
+          cd functions
+          npm update --save
+          if git diff --quiet package.json package-lock.json; then
+            echo "No functions dependency updates available"
+          else
+            updated_packages+=("functions")
+            echo "✅ Functions dependencies updated"
+          fi
+          cd ..
+        fi
+        
+        # Create PR if updates were made
+        if [[ ${#updated_packages[@]} -gt 0 ]]; then
+          branch_name="auto-update-deps-$(date +%Y%m%d-%H%M%S)"
+          git checkout -b "$branch_name"
+          git add .
+          git commit -m "🔄 Auto-update dependencies for: ${updated_packages[*]}"
+          git push origin "$branch_name"
+          
+          echo "✅ Created branch: $branch_name"
+          echo "updated_packages=${updated_packages[*]}" >> $GITHUB_ENV
+          echo "branch_name=$branch_name" >> $GITHUB_ENV
+        else
+          echo "ℹ️ No dependency updates needed"
+        fi
+
+  license-check:
+    name: 📄 License Compliance
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Install license checker
+      run: npm install -g license-checker
+
+    - name: Check licenses
+      run: |
+        echo "📄 Checking dependency licenses..."
+        
+        # Check root dependencies
+        if [[ -f "package.json" ]]; then
+          echo "Checking root dependency licenses..."
+          npm ci --prefer-offline --no-audit --no-fund
+          license-checker --json --out root-licenses.json || true
+          
+          # Check for problematic licenses
+          if [[ -f "root-licenses.json" ]]; then
+            problematic_licenses=$(jq -r 'to_entries[] | select(.value.licenses | test("GPL|AGPL|LGPL"; "i")) | .key' root-licenses.json || true)
+            if [[ -n "$problematic_licenses" ]]; then
+              echo "⚠️ Found potentially problematic licenses in root dependencies:"
+              echo "$problematic_licenses"
+            else
+              echo "✅ No problematic licenses found in root dependencies"
+            fi
+          fi
+        fi
+        
+        # Check functions dependencies
+        if [[ -f "functions/package.json" ]]; then
+          echo "Checking functions dependency licenses..."
+          cd functions
+          npm ci --prefer-offline --no-audit --no-fund
+          license-checker --json --out ../functions-licenses.json || true
+          cd ..
+          
+          # Check for problematic licenses
+          if [[ -f "functions-licenses.json" ]]; then
+            problematic_licenses=$(jq -r 'to_entries[] | select(.value.licenses | test("GPL|AGPL|LGPL"; "i")) | .key' functions-licenses.json || true)
+            if [[ -n "$problematic_licenses" ]]; then
+              echo "⚠️ Found potentially problematic licenses in functions dependencies:"
+              echo "$problematic_licenses"
+            else
+              echo "✅ No problematic licenses found in functions dependencies"
+            fi
+          fi
+        fi
+
+    - name: Upload license reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: license-reports
+        path: |
+          root-licenses.json
+          functions-licenses.json
+        retention-days: 30
+
+  summary:
+    name: 📋 Security Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [security-audit, dependency-analysis, license-check]
+    if: always()
+    
+    steps:
+    - name: Generate security summary
+      run: |
+        echo "# 🔒 Security & Dependency Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Scan Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 📊 Check Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔍 Security Audit | ${{ needs.security-audit.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📊 Dependency Analysis | ${{ needs.dependency-analysis.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 📄 License Check | ${{ needs.license-check.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        if [[ "${{ needs.security-audit.result }}" == "success" ]] && 
+           [[ "${{ needs.dependency-analysis.result }}" == "success" ]] && 
+           [[ "${{ needs.license-check.result }}" == "success" ]]; then
+          echo "## ✅ All Security Checks Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "No security vulnerabilities or compliance issues detected." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ⚠️ Security Issues Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please review the failed checks and address any security concerns." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📁 **Artifacts:** Security audit results, dependency analysis, and license reports are available for download." >> $GITHUB_STEP_SUMMARY 

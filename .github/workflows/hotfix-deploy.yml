@@ -1,0 +1,240 @@
+name: 🚨 Hotfix Deploy
+
+on:
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Component to deploy'
+        required: true
+        type: choice
+        options:
+        - functions
+        - hosting
+        - firestore
+        - all
+      reason:
+        description: 'Reason for hotfix'
+        required: true
+        type: string
+      skip_validation:
+        description: 'Skip validation (emergency only)'
+        required: false
+        default: false
+        type: boolean
+
+env:
+  NODE_VERSION: '18'
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+
+jobs:
+  emergency-validation:
+    name: 🔍 Emergency Validation
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    if: ${{ !inputs.skip_validation }}
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Critical file check
+      run: |
+        echo "🚨 Emergency validation for hotfix deployment"
+        echo "Reason: ${{ inputs.reason }}"
+        echo "Component: ${{ inputs.component }}"
+        
+        # Only check critical files
+        if [[ "${{ inputs.component }}" == "functions" || "${{ inputs.component }}" == "all" ]]; then
+          if [[ ! -f "functions/package.json" ]]; then
+            echo "❌ functions/package.json missing"
+            exit 1
+          fi
+        fi
+        
+        if [[ "${{ inputs.component }}" == "firestore" || "${{ inputs.component }}" == "all" ]]; then
+          if [[ ! -f "firestore.rules" ]]; then
+            echo "❌ firestore.rules missing"
+            exit 1
+          fi
+        fi
+        
+        if [[ ! -f "firebase.json" ]]; then
+          echo "❌ firebase.json missing"
+          exit 1
+        fi
+        
+        echo "✅ Critical files present"
+
+  hotfix-setup:
+    name: ⚡ Hotfix Setup
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [emergency-validation]
+    if: always() && (needs.emergency-validation.result == 'success' || inputs.skip_validation)
+    outputs:
+      project-id: ${{ env.PROJECT_ID }}
+      
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Install Firebase CLI
+      run: |
+        npm install -g firebase-tools
+        firebase use ${{ env.PROJECT_ID }}
+
+    - name: Install dependencies (functions only)
+      if: inputs.component == 'functions' || inputs.component == 'all'
+      run: |
+        cd functions
+        npm ci --prefer-offline --no-audit --no-fund --silent
+        cd ..
+
+  deploy-functions-hotfix:
+    name: ⚡ Deploy Functions (Hotfix)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    needs: [hotfix-setup]
+    if: inputs.component == 'functions' || inputs.component == 'all'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: ${{ env.NODE_VERSION }}
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+
+    - name: Install dependencies
+      run: |
+        cd functions
+        npm ci --prefer-offline --no-audit --no-fund --silent
+        cd ..
+
+    - name: Deploy Functions (Emergency)
+      run: |
+        echo "🚨 EMERGENCY FUNCTIONS DEPLOYMENT"
+        echo "Reason: ${{ inputs.reason }}"
+        firebase use ${{ needs.hotfix-setup.outputs.project-id }}
+        firebase deploy --only functions --project ${{ needs.hotfix-setup.outputs.project-id }} --force
+        echo "✅ Functions deployed successfully"
+
+  deploy-hosting-hotfix:
+    name: 🌐 Deploy Hosting (Hotfix)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    needs: [hotfix-setup]
+    if: inputs.component == 'hosting' || inputs.component == 'all'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+
+    - name: Deploy Hosting (Emergency)
+      run: |
+        echo "🚨 EMERGENCY HOSTING DEPLOYMENT"
+        echo "Reason: ${{ inputs.reason }}"
+        firebase use ${{ needs.hotfix-setup.outputs.project-id }}
+        firebase deploy --only hosting --project ${{ needs.hotfix-setup.outputs.project-id }}
+        echo "✅ Hosting deployed successfully"
+
+  deploy-firestore-hotfix:
+    name: 🗄️ Deploy Firestore (Hotfix)
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    needs: [hotfix-setup]
+    if: inputs.component == 'firestore' || inputs.component == 'all'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
+
+    - name: Deploy Firestore (Emergency)
+      run: |
+        echo "🚨 EMERGENCY FIRESTORE DEPLOYMENT"
+        echo "Reason: ${{ inputs.reason }}"
+        firebase use ${{ needs.hotfix-setup.outputs.project-id }}
+        firebase deploy --only firestore:rules --project ${{ needs.hotfix-setup.outputs.project-id }}
+        echo "✅ Firestore rules deployed successfully"
+
+  hotfix-notification:
+    name: 📢 Hotfix Notification
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [hotfix-setup, deploy-functions-hotfix, deploy-hosting-hotfix, deploy-firestore-hotfix]
+    if: always()
+    
+    steps:
+    - name: Generate hotfix summary
+      run: |
+        echo "# 🚨 Hotfix Deployment Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Component:** ${{ inputs.component }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Reason:** ${{ inputs.reason }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Triggered by:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Validation Skipped:** ${{ inputs.skip_validation }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Check results based on component
+        if [[ "${{ inputs.component }}" == "functions" ]]; then
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚡ Functions | ${{ needs.deploy-functions-hotfix.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ inputs.component }}" == "hosting" ]]; then
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🌐 Hosting | ${{ needs.deploy-hosting-hotfix.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        elif [[ "${{ inputs.component }}" == "firestore" ]]; then
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🗄️ Firestore | ${{ needs.deploy-firestore-hotfix.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        else
+          echo "| Component | Status |" >> $GITHUB_STEP_SUMMARY
+          echo "|-----------|--------|" >> $GITHUB_STEP_SUMMARY
+          echo "| ⚡ Functions | ${{ needs.deploy-functions-hotfix.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🌐 Hosting | ${{ needs.deploy-hosting-hotfix.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🗄️ Firestore | ${{ needs.deploy-firestore-hotfix.result == 'success' && '✅ Success' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "⚠️ **This was an emergency hotfix deployment. Please ensure proper testing is done post-deployment.**" >> $GITHUB_STEP_SUMMARY
+
+    - name: Notify hotfix completion
+      run: |
+        echo "::warning title=🚨 Hotfix Deployed::Emergency deployment completed for ${{ inputs.component }}. Reason: ${{ inputs.reason }}" 

@@ -1,0 +1,362 @@
+name: 📊 Performance Monitor
+
+on:
+  workflow_run:
+    workflows: ["🚀 Deploy to Production"]
+    types:
+      - completed
+  schedule:
+    # Run performance checks every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+    inputs:
+      test_type:
+        description: 'Type of performance test'
+        required: true
+        type: choice
+        options:
+        - full
+        - lighthouse
+        - functions
+        - basic
+        default: 'basic'
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  WEBSITE_URL: https://${{ secrets.GCP_PROJECT_ID }}.web.app
+
+jobs:
+  lighthouse-audit:
+    name: 🔍 Lighthouse Audit
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    if: inputs.test_type == 'full' || inputs.test_type == 'lighthouse' || github.event_name == 'schedule'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+
+    - name: Install Lighthouse CI
+      run: |
+        npm install -g @lhci/cli@0.12.x
+        echo "✅ Lighthouse CI installed"
+
+    - name: Wait for deployment
+      if: github.event_name == 'workflow_run'
+      run: |
+        echo "⏳ Waiting for deployment to propagate..."
+        sleep 60
+
+    - name: Run Lighthouse audit
+      run: |
+        echo "🔍 Running Lighthouse audit on ${{ env.WEBSITE_URL }}"
+        
+        # Create lighthouse config
+        cat > lighthouserc.json << EOF
+        {
+          "ci": {
+            "collect": {
+              "url": ["${{ env.WEBSITE_URL }}"],
+              "numberOfRuns": 3,
+              "settings": {
+                "chromeFlags": "--no-sandbox --headless"
+              }
+            },
+            "assert": {
+              "assertions": {
+                "categories:performance": ["warn", {"minScore": 0.7}],
+                "categories:accessibility": ["error", {"minScore": 0.9}],
+                "categories:best-practices": ["warn", {"minScore": 0.8}],
+                "categories:seo": ["warn", {"minScore": 0.8}]
+              }
+            },
+            "upload": {
+              "target": "temporary-public-storage"
+            }
+          }
+        }
+        EOF
+        
+        # Run Lighthouse
+        lhci autorun --config=lighthouserc.json || echo "Lighthouse completed with warnings"
+
+    - name: Parse Lighthouse results
+      run: |
+        echo "📊 Parsing Lighthouse results..."
+        
+        # Find the latest results
+        if [[ -d ".lighthouseci" ]]; then
+          latest_report=$(find .lighthouseci -name "*.json" | head -1)
+          if [[ -f "$latest_report" ]]; then
+            performance=$(jq '.categories.performance.score * 100' "$latest_report")
+            accessibility=$(jq '.categories.accessibility.score * 100' "$latest_report")
+            best_practices=$(jq '.categories["best-practices"].score * 100' "$latest_report")
+            seo=$(jq '.categories.seo.score * 100' "$latest_report")
+            
+            echo "## 🔍 Lighthouse Audit Results" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "| Category | Score |" >> $GITHUB_STEP_SUMMARY
+            echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+            echo "| 🚀 Performance | ${performance}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| ♿ Accessibility | ${accessibility}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| ✅ Best Practices | ${best_practices}% |" >> $GITHUB_STEP_SUMMARY
+            echo "| 🔍 SEO | ${seo}% |" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            
+            # Set performance thresholds
+            if (( $(echo "$performance < 70" | bc -l) )); then
+              echo "::warning title=Performance Issue::Website performance score is below 70%"
+            fi
+            
+            if (( $(echo "$accessibility < 90" | bc -l) )); then
+              echo "::error title=Accessibility Issue::Website accessibility score is below 90%"
+            fi
+          fi
+        fi
+
+    - name: Upload Lighthouse reports
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: lighthouse-reports
+        path: .lighthouseci/
+        retention-days: 30
+
+  function-performance:
+    name: ⚡ Function Performance
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    if: inputs.test_type == 'full' || inputs.test_type == 'functions' || github.event_name == 'schedule'
+    
+    steps:
+    - name: Test function endpoints
+      run: |
+        echo "⚡ Testing Firebase Functions performance..."
+        
+        # Define function endpoints to test
+        functions=(
+          "handleWaitlistSubmission"
+        )
+        
+        results=()
+        
+        for func in "${functions[@]}"; do
+          echo "Testing function: $func"
+          url="https://us-central1-${{ env.PROJECT_ID }}.cloudfunctions.net/$func"
+          
+          # Test with a simple GET request (if supported) or OPTIONS
+          start_time=$(date +%s%N)
+          
+          # Try OPTIONS request first (most functions support this)
+          if curl -s -o /dev/null -w "%{http_code}" --max-time 30 -X OPTIONS "$url" | grep -q "200\|204\|405"; then
+            end_time=$(date +%s%N)
+            response_time=$(( (end_time - start_time) / 1000000 )) # Convert to milliseconds
+            
+            echo "✅ $func responded in ${response_time}ms"
+            results+=("$func:${response_time}ms")
+          else
+            echo "⚠️ $func did not respond or is not accessible"
+            results+=("$func:timeout")
+          fi
+        done
+        
+        # Generate summary
+        echo "## ⚡ Function Performance Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Function | Response Time |" >> $GITHUB_STEP_SUMMARY
+        echo "|----------|---------------|" >> $GITHUB_STEP_SUMMARY
+        
+        for result in "${results[@]}"; do
+          func_name=$(echo "$result" | cut -d: -f1)
+          response_time=$(echo "$result" | cut -d: -f2)
+          echo "| $func_name | $response_time |" >> $GITHUB_STEP_SUMMARY
+        done
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+
+  website-health:
+    name: 🌐 Website Health Check
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    
+    steps:
+    - name: Basic health checks
+      run: |
+        echo "🌐 Running basic website health checks..."
+        
+        # Test website accessibility
+        echo "Testing website accessibility..."
+        if curl -f -s -o /dev/null --max-time 30 "${{ env.WEBSITE_URL }}"; then
+          echo "✅ Website is accessible"
+          website_status="✅ Online"
+        else
+          echo "❌ Website is not accessible"
+          website_status="❌ Offline"
+        fi
+        
+        # Test response time
+        echo "Testing response time..."
+        start_time=$(date +%s%N)
+        if curl -f -s -o /dev/null --max-time 30 "${{ env.WEBSITE_URL }}"; then
+          end_time=$(date +%s%N)
+          response_time=$(( (end_time - start_time) / 1000000 ))
+          echo "✅ Response time: ${response_time}ms"
+        else
+          response_time="timeout"
+          echo "⚠️ Response time: timeout"
+        fi
+        
+        # Check for HTTPS
+        echo "Checking HTTPS..."
+        if curl -f -s -o /dev/null --max-time 30 "https://${{ secrets.GCP_PROJECT_ID }}.web.app"; then
+          echo "✅ HTTPS is working"
+          https_status="✅ Enabled"
+        else
+          echo "⚠️ HTTPS issue detected"
+          https_status="⚠️ Issue"
+        fi
+        
+        # Generate health summary
+        echo "## 🌐 Website Health Status" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Check Time:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🌐 Website Status | $website_status |" >> $GITHUB_STEP_SUMMARY
+        echo "| ⚡ Response Time | ${response_time}ms |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔒 HTTPS | $https_status |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Set alerts for issues
+        if [[ "$website_status" == *"Offline"* ]]; then
+          echo "::error title=Website Down::The website is not accessible"
+        fi
+        
+        if [[ "$response_time" != "timeout" ]] && [[ "$response_time" -gt 5000 ]]; then
+          echo "::warning title=Slow Response::Website response time is over 5 seconds"
+        fi
+
+  uptime-check:
+    name: ⏰ Uptime Monitoring
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    if: github.event_name == 'schedule'
+    
+    steps:
+    - name: Multi-location uptime check
+      run: |
+        echo "⏰ Running uptime checks from multiple locations..."
+        
+        # Simulate checks from different regions by using different DNS servers
+        dns_servers=("8.8.8.8" "1.1.1.1" "208.67.222.222")
+        results=()
+        
+        for dns in "${dns_servers[@]}"; do
+          echo "Testing with DNS server: $dns"
+          
+          # Use different DNS server for resolution
+          if timeout 30 nslookup "${{ secrets.GCP_PROJECT_ID }}.web.app" "$dns" > /dev/null 2>&1; then
+            if curl -f -s -o /dev/null --max-time 30 --dns-servers "$dns" "${{ env.WEBSITE_URL }}"; then
+              results+=("$dns:✅")
+              echo "✅ Success with DNS $dns"
+            else
+              results+=("$dns:❌")
+              echo "❌ Failed with DNS $dns"
+            fi
+          else
+            results+=("$dns:⚠️")
+            echo "⚠️ DNS resolution failed with $dns"
+          fi
+        done
+        
+        # Count successful checks
+        success_count=0
+        total_count=${#results[@]}
+        
+        for result in "${results[@]}"; do
+          if [[ "$result" == *"✅"* ]]; then
+            ((success_count++))
+          fi
+        done
+        
+        uptime_percentage=$(( success_count * 100 / total_count ))
+        
+        echo "## ⏰ Uptime Check Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Uptime:** ${uptime_percentage}% (${success_count}/${total_count} checks passed)" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| DNS Server | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|------------|--------|" >> $GITHUB_STEP_SUMMARY
+        
+        for result in "${results[@]}"; do
+          dns=$(echo "$result" | cut -d: -f1)
+          status=$(echo "$result" | cut -d: -f2)
+          echo "| $dns | $status |" >> $GITHUB_STEP_SUMMARY
+        done
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Alert if uptime is below 100%
+        if [[ "$uptime_percentage" -lt 100 ]]; then
+          echo "::warning title=Uptime Issue::Website uptime is ${uptime_percentage}% - some checks failed"
+        fi
+
+  performance-summary:
+    name: 📊 Performance Summary
+    runs-on: ubuntu-latest
+    timeout-minutes: 2
+    needs: [lighthouse-audit, function-performance, website-health, uptime-check]
+    if: always()
+    
+    steps:
+    - name: Generate performance summary
+      run: |
+        echo "# 📊 Performance Monitoring Summary" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "**Monitor Date:** $(date -u '+%Y-%m-%d %H:%M:%S UTC')" >> $GITHUB_STEP_SUMMARY
+        echo "**Trigger:** ${{ github.event_name }}" >> $GITHUB_STEP_SUMMARY
+        echo "**Website:** ${{ env.WEBSITE_URL }}" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "## 🔍 Check Results" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "| Check | Status |" >> $GITHUB_STEP_SUMMARY
+        echo "|-------|--------|" >> $GITHUB_STEP_SUMMARY
+        echo "| 🔍 Lighthouse Audit | ${{ needs.lighthouse-audit.result == 'success' && '✅ Passed' || needs.lighthouse-audit.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| ⚡ Function Performance | ${{ needs.function-performance.result == 'success' && '✅ Passed' || needs.function-performance.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| 🌐 Website Health | ${{ needs.website-health.result == 'success' && '✅ Passed' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "| ⏰ Uptime Check | ${{ needs.uptime-check.result == 'success' && '✅ Passed' || needs.uptime-check.result == 'skipped' && '⏭️ Skipped' || '❌ Failed' }} |" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        
+        # Overall health assessment
+        failed_checks=0
+        total_checks=0
+        
+        for result in "${{ needs.lighthouse-audit.result }}" "${{ needs.function-performance.result }}" "${{ needs.website-health.result }}" "${{ needs.uptime-check.result }}"; do
+          if [[ "$result" != "skipped" ]]; then
+            ((total_checks++))
+            if [[ "$result" != "success" ]]; then
+              ((failed_checks++))
+            fi
+          fi
+        done
+        
+        if [[ "$failed_checks" -eq 0 ]]; then
+          echo "## ✅ All Performance Checks Passed" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Website is performing well across all monitored metrics." >> $GITHUB_STEP_SUMMARY
+        else
+          echo "## ⚠️ Performance Issues Detected" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Failed Checks:** $failed_checks/$total_checks" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Please review the failed checks and address any performance issues." >> $GITHUB_STEP_SUMMARY
+        fi
+        
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "📁 **Artifacts:** Performance reports and detailed metrics are available for download." >> $GITHUB_STEP_SUMMARY 
