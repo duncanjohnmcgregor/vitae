@@ -78,23 +78,9 @@ jobs:
         # Create a version file for better cache invalidation
         "latest" | Out-File -FilePath "firebase-tools-version" -Encoding utf8
         
-        # Use npm ci for faster, more reliable installation
-        if (-not (Test-Path "package.json")) {
-          # Create minimal package.json for npm ci
-          @{
-            "name" = "firebase-cli-temp"
-            "version" = "1.0.0"
-            "dependencies" = @{
-              "firebase-tools" = "latest"
-            }
-          } | ConvertTo-Json | Out-File -FilePath "package.json" -Encoding utf8
-          
-          # Generate package-lock.json
-          npm install --package-lock-only --no-audit --no-fund --silent
-        }
-        
-        # Install using npm ci (faster and more reliable)
-        npm ci --only=production --no-audit --no-fund --silent
+        # Simple and reliable installation using npm install
+        Write-Host "Installing firebase-tools locally..."
+        npm install firebase-tools@latest --no-save --no-audit --no-fund --prefer-offline --silent
         
         # Verify installation
         $env:PATH = "$(Get-Location)/node_modules/.bin;$env:PATH"
