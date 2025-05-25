@@ -7,7 +7,7 @@
  * See a full list of supported triggers at https://firebase.google.com/docs/functions
  */
 
-const functions = require('firebase-functions');
+const {onRequest} = require('firebase-functions/v2/https');
 const admin = require('firebase-admin');
 const cors = require('cors')({origin: true});
 
@@ -23,7 +23,7 @@ const { FieldValue } = admin.firestore;
 // Create and deploy your first functions
 // https://firebase.google.com/docs/functions/get-started
 
-exports.handleWaitlistSubmission = functions.https.onRequest((req, res) => {
+exports.handleWaitlistSubmission = onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
@@ -64,7 +64,7 @@ exports.handleWaitlistSubmission = functions.https.onRequest((req, res) => {
   });
 });
 
-exports.handleStartStorySubmission = functions.https.onRequest((req, res) => {
+exports.handleStartStorySubmission = onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== 'POST') {
       res.status(405).json({ error: 'Method Not Allowed' });
