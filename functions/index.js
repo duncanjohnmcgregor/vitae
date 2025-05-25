@@ -132,3 +132,5 @@ exports.handleStartStorySubmission = onRequest((req, res) => {
     }
   });
 });
+
+// ESLint formatting fix
