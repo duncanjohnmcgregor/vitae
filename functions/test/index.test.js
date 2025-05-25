@@ -1,6 +1,6 @@
 // Tests for Firebase Cloud Functions
-const admin = require('firebase-admin')
-const test = require('firebase-functions-test')()
+const admin = require("firebase-admin");
+const functionsTest = require("firebase-functions-test")();
 
 // Mock Firebase Admin SDK
 jest.mock('firebase-admin', () => ({
@@ -57,8 +57,8 @@ describe('Firebase Cloud Functions', () => {
   })
 
   afterAll(() => {
-    test.cleanup()
-  })
+    functionsTest.cleanup();
+  });
 
   describe('handleWaitlistSubmission', () => {
     test('should successfully handle valid waitlist submission', async () => {
