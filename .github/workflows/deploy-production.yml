@@ -68,6 +68,20 @@ jobs:
       with:
         version: 'latest'
 
+    - name: Install Dependencies
+      run: |
+        if (Test-Path "package.json") {
+          Write-Host "Installing root dependencies..."
+          npm ci
+        }
+        if (Test-Path "functions/package.json") {
+          Write-Host "Installing functions dependencies..."
+          Set-Location functions
+          npm ci
+          Set-Location ..
+        }
+      shell: pwsh
+
     - name: Configure Firebase Token
       run: |
         # Use Firebase CI token for authentication and set active project
@@ -81,20 +95,6 @@ jobs:
         gcloud config list project
         Write-Host "Verifying Firebase authentication..."
         npx firebase projects:list --token ${{ secrets.FIREBASE_TOKEN }}
-      shell: pwsh
-
-    - name: Install Dependencies
-      run: |
-        if (Test-Path "package.json") {
-          Write-Host "Installing root dependencies..."
-          npm ci
-        }
-        if (Test-Path "functions/package.json") {
-          Write-Host "Installing functions dependencies..."
-          Set-Location functions
-          npm ci
-          Set-Location ..
-        }
       shell: pwsh
 
     - name: Deploy using PowerShell script
