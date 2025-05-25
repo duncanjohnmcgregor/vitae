@@ -2,6 +2,7 @@
   "name": "vitae-frontend",
   "version": "1.0.0",
   "description": "Frontend tests for Vitae landing page",
+  "type": "module",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
@@ -32,12 +33,23 @@
     "stylelint-config-standard": "^34.0.0"
   },
   "jest": {
+    "preset": "default",
     "testEnvironment": "jsdom",
+    "extensionsToTreatAsEsm": [".js"],
+    "globals": {
+      "ts-jest": {
+        "useESM": true
+      }
+    },
+    "moduleNameMapper": {
+      "^(\\.{1,2}/.*)\\.js$": "$1"
+    },
+    "transform": {},
     "setupFilesAfterEnv": ["<rootDir>/tests/setup.js"],
     "testMatch": ["<rootDir>/tests/**/*.test.js"],
     "collectCoverageFrom": [
-      "src/*.js",
-      "!src/*.backup.js"
+      "*.js",
+      "!*.backup.js"
     ],
     "coverageReporters": ["text", "lcov", "html"],
     "coverageThreshold": {

@@ -1,0 +1,43 @@
+# CODEOWNERS file for Vitae project
+# This file defines who should review changes to different parts of the codebase
+# Learn more: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Global owners - these users will be requested for review on all PRs
+* @your-username
+
+# Frontend code (HTML, CSS, JavaScript)
+src/ @your-username
+src/*.html @your-username
+src/*.css @your-username
+src/*.js @your-username
+src/tests/ @your-username
+
+# Backend code (Firebase Cloud Functions)
+functions/ @your-username
+functions/*.js @your-username
+functions/test/ @your-username
+
+# Infrastructure code (Terraform)
+terraform/ @your-username
+terraform/*.tf @your-username
+terraform/tests/ @your-username
+
+# CI/CD and workflows
+.github/ @your-username
+.github/workflows/ @your-username
+
+# Configuration files
+firebase.json @your-username
+.firebaserc @your-username
+firestore.rules @your-username
+
+# Documentation
+*.md @your-username
+TESTING.md @your-username
+BRANCH_PROTECTION_SETUP.md @your-username
+
+# Package files (require careful review for security)
+package.json @your-username
+package-lock.json @your-username
+src/package.json @your-username
+functions/package.json @your-username 

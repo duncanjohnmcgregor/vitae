@@ -1,4 +1,4 @@
-### **vitae**
+# **vitae**
 *leave your legacy*
 
 **vitae is an application that:**
@@ -49,10 +49,7 @@ cd vitae
     - figure out how we enable other people to use our ai tooling to create their own interviews with people they know, for some share of the revenue
 </details>
 
-
 ---
-
-
 
 <details>
 <summary>💰 <strong>Cost Estimation</strong></summary>
@@ -103,220 +100,213 @@ vitae/
 ```
 </details>
 
-
 ---
 
 <details>
 <summary>🔧 <strong>Technical Help</strong></summary>
 
-   <details>
-   <summary>🚀 <strong>Quick Start - One-Command Deployment</strong></summary>
+<details>
+<summary>🚀 <strong>Quick Start - One-Command Deployment</strong></summary>
 
-   Deploy your Vitae landing page to production with a single PowerShell command using our automated deployment script.
+Deploy your Vitae landing page to production with a single PowerShell command using our automated deployment script.
 
-   ### **Prerequisites**
+### **Prerequisites**
 
-   1. **Required Tools** (script will check for these):
-      - [Node.js](https://nodejs.org/) (v18 or later)
-      - [Firebase CLI](https://firebase.google.com/docs/cli): `npm install -g firebase-tools`
-      - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
-      - [Terraform](https://www.terraform.io/downloads.html) (optional, for advanced infrastructure)
+1. **Required Tools** (script will check for these):
+   - [Node.js](https://nodejs.org/) (v18 or later)
+   - [Firebase CLI](https://firebase.google.com/docs/cli): `npm install -g firebase-tools`
+   - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install)
+   - [Terraform](https://www.terraform.io/downloads.html) (optional, for advanced infrastructure)
 
-   2. **Google Cloud Setup**:
-      ```powershell
-      # Authenticate with Google Cloud
-      gcloud auth login
-      gcloud auth application-default login
-      
-      # Enable required APIs
-      gcloud services enable cloudfunctions.googleapis.com
-      gcloud services enable storage-api.googleapis.com
-      gcloud services enable compute.googleapis.com
-      ```
-
-   3. **Firebase Setup**:
-      ```powershell
-      # Login to Firebase
-      firebase login
-      
-      # Create Firebase project (or use existing GCP project)
-      firebase projects:addfirebase YOUR_GCP_PROJECT_ID
-      ```
-
-   ### **Deployment Commands**
-
-   **🎯 Production Deployment (Automatic):**
+2. **Google Cloud Setup**:
    ```powershell
-   # Deploy everything - uses project ID from terraform.tfvars automatically
+   # Authenticate with Google Cloud
+   gcloud auth login
+   gcloud auth application-default login
+   
+   # Enable required APIs
+   gcloud services enable cloudfunctions.googleapis.com
+   gcloud services enable storage-api.googleapis.com
+   gcloud services enable compute.googleapis.com
+   ```
+
+3. **Firebase Setup**:
+   ```powershell
+   # Login to Firebase
+   firebase login
+   
+   # Create Firebase project (or use existing GCP project)
+   firebase projects:addfirebase YOUR_GCP_PROJECT_ID
+   ```
+
+### **Deployment Commands**
+
+**🎯 Production Deployment (Automatic):**
+```powershell
+# Deploy everything - uses project ID from terraform.tfvars automatically
+.\deploy.ps1 -Environment prod
+```
+
+**🛠️ Local Development:**
+```powershell
+# Start local development environment with emulators
+.\deploy.ps1
+```
+
+**⚡ Quick Options:**
+```powershell
+# Firebase only (no Terraform infrastructure)
+.\deploy.ps1 -Environment prod -SkipTerraform
+
+# Functions only
+.\deploy.ps1 -Environment prod -DeployFunctionsOnly
+
+# Custom project ID
+.\deploy.ps1 -Environment prod -ProjectId your-project-id
+```
+
+### **What Gets Deployed**
+
+**Firebase (Primary):**
+- ✅ **Hosting**: Static website at `https://your-project.web.app`
+- ✅ **Functions**: Serverless waitlist handler
+- ✅ **Firestore**: Database for storing submissions
+- ✅ **Security Rules**: Database access controls
+
+**Terraform (Optional):**
+- ✅ **Custom Domain**: SSL-enabled custom domain
+- ✅ **CDN**: Google Cloud Load Balancer with caching
+- ✅ **DNS**: Managed DNS zone
+
+### **First-Time Setup**
+
+1. **Configure your project**:
+   ```powershell
+   # Edit terraform/terraform.tfvars with your project details
+   # The script will auto-detect your project ID from here
+   ```
+
+2. **Deploy to production**:
+   ```powershell
    .\deploy.ps1 -Environment prod
    ```
 
-   **🛠️ Local Development:**
-   ```powershell
-   # Start local development environment with emulators
-   .\deploy.ps1
-   ```
+3. **Access your site**:
+   - **Firebase URL**: `https://your-project-id.web.app`
+   - **Custom Domain**: (if configured via Terraform)
 
-   **⚡ Quick Options:**
-   ```powershell
-   # Firebase only (no Terraform infrastructure)
-   .\deploy.ps1 -Environment prod -SkipTerraform
-   
-   # Functions only
-   .\deploy.ps1 -Environment prod -DeployFunctionsOnly
-   
-   # Custom project ID
-   .\deploy.ps1 -Environment prod -ProjectId your-project-id
-   ```
+</details>
 
-   ### **What Gets Deployed**
+<details>
+<summary>🏠 <strong>Local Development</strong></summary>
 
-   **Firebase (Primary):**
-   - ✅ **Hosting**: Static website at `https://your-project.web.app`
-   - ✅ **Functions**: Serverless waitlist handler
-   - ✅ **Firestore**: Database for storing submissions
-   - ✅ **Security Rules**: Database access controls
+**Start Development Environment:**
+```powershell
+.\deploy.ps1
+```
 
-   **Terraform (Optional):**
-   - ✅ **Custom Domain**: SSL-enabled custom domain
-   - ✅ **CDN**: Google Cloud Load Balancer with caching
-   - ✅ **DNS**: Managed DNS zone
+**Local URLs:**
+- 🌐 **Website**: http://localhost:3000
+- 🔥 **Firebase UI**: http://localhost:4001
+- ⚡ **Functions**: http://localhost:5001
+- 🗄️ **Firestore**: http://localhost:8081
 
-   ### **First-Time Setup**
+**Features:**
+- ✅ Live reload for website changes
+- ✅ Local Firebase Functions testing
+- ✅ Local Firestore database
+- ✅ Automatic URL switching for development
 
-   1. **Configure your project**:
-      ```powershell
-      # Edit terraform/terraform.tfvars with your project details
-      # The script will auto-detect your project ID from here
-      ```
+</details>
 
-   2. **Deploy to production**:
-      ```powershell
-      .\deploy.ps1 -Environment prod
-      ```
+<details>
+<summary>🌐 <strong>Custom Domain Setup</strong></summary>
 
-   3. **Access your site**:
-      - **Firebase URL**: `https://your-project-id.web.app`
-      - **Custom Domain**: (if configured via Terraform)
+**Option 1: Firebase Hosting Domain (Easiest)**
+```powershell
+# Add custom domain via Firebase Console
+# https://console.firebase.google.com/project/YOUR_PROJECT/hosting
+```
 
-   </details>
+**Option 2: Terraform with Load Balancer (Advanced)**
+```hcl
+# Edit terraform/terraform.tfvars
+domain_name = "vitae.yourdomain.com."
+enable_load_balancer = true
+enable_ssl = true
+```
 
-   <details>
-   <summary>🏠 <strong>Local Development</strong></summary>
+```powershell
+# Deploy with Terraform
+.\deploy.ps1 -Environment prod
+```
 
-   **Start Development Environment:**
-   ```powershell
-   .\deploy.ps1
-   ```
+</details>
 
-   **Local URLs:**
-   - 🌐 **Website**: http://localhost:3000
-   - 🔥 **Firebase UI**: http://localhost:4001
-   - ⚡ **Functions**: http://localhost:5001
-   - 🗄️ **Firestore**: http://localhost:8081
+<details>
+<summary>📊 <strong>Monitoring & Logs</strong></summary>
 
-   **Features:**
-   - ✅ Live reload for website changes
-   - ✅ Local Firebase Functions testing
-   - ✅ Local Firestore database
-   - ✅ Automatic URL switching for development
+**Firebase Console:**
+- **Hosting**: https://console.firebase.google.com/project/YOUR_PROJECT/hosting
+- **Functions**: https://console.firebase.google.com/project/YOUR_PROJECT/functions
+- **Firestore**: https://console.firebase.google.com/project/YOUR_PROJECT/firestore
 
-   </details>
+**Google Cloud Console:**
+- **Project Dashboard**: https://console.cloud.google.com/home/dashboard?project=YOUR_PROJECT
+- **Functions Logs**: https://console.cloud.google.com/functions
+- **Storage**: https://console.cloud.google.com/storage
 
-   <details>
-   <summary>🌐 <strong>Custom Domain Setup</strong></summary>
+</details>
 
-   **Option 1: Firebase Hosting Domain (Easiest)**
-   ```powershell
-   # Add custom domain via Firebase Console
-   # https://console.firebase.google.com/project/YOUR_PROJECT/hosting
-   ```
+<details>
+<summary>🧹 <strong>Cleanup</strong></summary>
 
-   **Option 2: Terraform with Load Balancer (Advanced)**
-   ```hcl
-   # Edit terraform/terraform.tfvars
-   domain_name = "vitae.yourdomain.com."
-   enable_load_balancer = true
-   enable_ssl = true
-   ```
+**Remove Production Resources:**
+```powershell
+# Delete Terraform infrastructure
+cd terraform
+terraform destroy
 
-   ```powershell
-   # Deploy with Terraform
-   .\deploy.ps1 -Environment prod
-   ```
+# Delete Firebase resources via console
+# https://console.firebase.google.com/project/YOUR_PROJECT/settings/general
+```
 
-   </details>
+**Stop Local Development:**
+```
+Press Ctrl+C in the terminal running emulators
+```
 
-   <details>
-   <summary>📊 <strong>Monitoring & Logs</strong></summary>
+</details>
 
-   **Firebase Console:**
-   - **Hosting**: https://console.firebase.google.com/project/YOUR_PROJECT/hosting
-   - **Functions**: https://console.firebase.google.com/project/YOUR_PROJECT/functions
-   - **Firestore**: https://console.firebase.google.com/project/YOUR_PROJECT/firestore
+<details>
+<summary>❓ <strong>Troubleshooting</strong></summary>
 
-   **Google Cloud Console:**
-   - **Project Dashboard**: https://console.cloud.google.com/home/dashboard?project=YOUR_PROJECT
-   - **Functions Logs**: https://console.cloud.google.com/functions
-   - **Storage**: https://console.cloud.google.com/storage
+**Common Issues:**
 
-   </details>
+1. **"Command not found" errors**
+   - Install missing tools and restart terminal
+   - Check PATH environment variable
 
-   <details>
-   <summary>🧹 <strong>Cleanup</strong></summary>
+2. **Authentication errors**
+   - Run `firebase login` and `gcloud auth login`
+   - Ensure you have project permissions
 
-   **Remove Production Resources:**
-   ```powershell
-   # Delete Terraform infrastructure
-   cd terraform
-   terraform destroy
-   
-   # Delete Firebase resources via console
-   # https://console.firebase.google.com/project/YOUR_PROJECT/settings/general
-   ```
+3. **Deployment fails**
+   - Check that GCP project exists and billing is enabled
+   - Verify Firebase project is properly set up
+   - See detailed troubleshooting in [DEPLOYMENT.md](DEPLOYMENT.md)
 
-   **Stop Local Development:**
-   ```
-   Press Ctrl+C in the terminal running emulators
-   ```
+**Get Help:**
+```powershell
+# Show script help
+.\deploy.ps1 -?
 
-   </details>
+# Check tool versions
+node --version
+firebase --version
+gcloud --version
+terraform --version
+```
 
-   <details>
-   <summary>❓ <strong>Troubleshooting</strong></summary>
-
-   **Common Issues:**
-
-   1. **"Command not found" errors**
-      - Install missing tools and restart terminal
-      - Check PATH environment variable
-
-   2. **Authentication errors**
-      - Run `firebase login` and `gcloud auth login`
-      - Ensure you have project permissions
-
-   3. **Deployment fails**
-      - Check that GCP project exists and billing is enabled
-      - Verify Firebase project is properly set up
-      - See detailed troubleshooting in [DEPLOYMENT.md](DEPLOYMENT.md)
-
-   **Get Help:**
-   ```powershell
-   # Show script help
-   .\deploy.ps1 -?
-   
-   # Check tool versions
-   node --version
-   firebase --version
-   gcloud --version
-   terraform --version
-   ```
-
-   </details>
-   </details>
-
-
-
-
-v i t a e  
- 
+</details>
+</details>
