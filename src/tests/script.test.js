@@ -99,7 +99,7 @@ describe('Script.js Main Functionality', () => {
   describe('Button Interactions', () => {
     beforeEach(() => {
       document.body.innerHTML = `
-        <button class="btn">Start Your Story</button>
+        <button class="btn">Get Started</button>
         <button class="btn">Watch Demo</button>
         <button class="btn">Schedule a Call</button>
         <button class="btn">Learn More</button>
@@ -108,8 +108,27 @@ describe('Script.js Main Functionality', () => {
       loadScript()
     })
 
-    test('should show waitlist modal for "Start Your Story" button', () => {
-      const button = screen.getByText('Start Your Story')
+    test('should not show waitlist modal for "Start Your Story" button with href', () => {
+      // Update the button to have an href attribute like the real navigation buttons
+      document.body.innerHTML = `
+        <a href="start-your-story.html" class="btn">Start Your Story</a>
+        <button class="btn">Get Started</button>
+        <button class="btn">Watch Demo</button>
+        <button class="btn">Schedule a Call</button>
+        <button class="btn">Learn More</button>
+        <section id="features">Features Section</section>
+      `
+      loadScript()
+
+      const startStoryButton = screen.getByText('Start Your Story')
+      fireEvent.click(startStoryButton)
+
+      // Should not show modal for navigation links
+      expect(document.querySelector('.modal-overlay')).not.toBeInTheDocument()
+    })
+
+    test('should show waitlist modal for "Get Started" button', () => {
+      const button = screen.getByText('Get Started')
       fireEvent.click(button)
 
       expect(document.querySelector('.modal-overlay')).toBeInTheDocument()
@@ -147,7 +166,7 @@ describe('Script.js Main Functionality', () => {
     })
 
     test('should create ripple effect on button click', () => {
-      const button = screen.getByText('Start Your Story')
+      const button = screen.getByText('Get Started')
       
       fireEvent.click(button, {
         clientX: 100,

@@ -385,15 +385,123 @@ function Update-ScriptWithFunctionUrl {
         $scriptJsPath = "src/script.js"
         if (Test-Path $scriptJsPath) {
             $scriptJsContent = Get-Content -Path $scriptJsPath -Raw
-            $localUrl = "http://localhost:5001/vitae-local/us-central1/handleWaitlistSubmission"
+            $localUrl = "http://127.0.0.1:5001/vitae-local/us-central1/handleWaitlistSubmission"
             $productionUrl = "https://us-central1-vitae-460717.cloudfunctions.net/handleWaitlistSubmission"
             # Ensure both local and production URLs are set correctly for development
             $pattern = "const functionUrl = window\.location\.hostname === 'localhost'[^;]+;"
-            $replacement = "const functionUrl = window.location.hostname === 'localhost' ? '$localUrl' : '$productionUrl';"
+            $replacement = "const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '$localUrl' : '$productionUrl';"
             $updatedContent = $scriptJsContent -replace $pattern, $replacement
             $updatedContent | Set-Content -Path $scriptJsPath -Encoding UTF8
             Write-Success "Updated script.js with local function URL: $localUrl"
         }
+    }
+}
+
+# Function to update HTML files for local development
+function Update-HtmlFilesForLocal {
+    param([string]$Environment)
+    
+    if ($Environment -eq 'local') {
+        Write-Status "Updating HTML files for local development..."
+        
+        # Get all HTML files in src directory
+        $htmlFiles = Get-ChildItem -Path "src" -Filter "*.html"
+        
+        foreach ($htmlFile in $htmlFiles) {
+            $htmlPath = $htmlFile.FullName
+            $htmlContent = Get-Content -Path $htmlPath -Raw
+            $updated = $false
+            
+            # Update start-your-story.html form submission URL
+            if ($htmlFile.Name -eq "start-your-story.html") {
+                $localStartStoryUrl = "http://127.0.0.1:5001/vitae-local/us-central1/handleStartStorySubmission"
+                $productionStartStoryUrl = "https://us-central1-vitae-460717.cloudfunctions.net/handleStartStorySubmission"
+                
+                # Update the function URL in the script section
+                $pattern = "const functionUrl = window\.location\.hostname === 'localhost'[^;]+;"
+                $replacement = "const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '$localStartStoryUrl' : '$productionStartStoryUrl';"
+                
+                if ($htmlContent -match $pattern) {
+                    $htmlContent = $htmlContent -replace $pattern, $replacement
+                    $updated = $true
+                }
+            }
+            
+            # Save updated content if changes were made
+            if ($updated) {
+                $htmlContent | Set-Content -Path $htmlPath -Encoding UTF8
+                Write-Success "Updated $($htmlFile.Name) for local development"
+            }
+        }
+    } else {
+        Write-Status "Updating HTML files for production environment..."
+        
+        # Get all HTML files in src directory
+        $htmlFiles = Get-ChildItem -Path "src" -Filter "*.html"
+        
+        foreach ($htmlFile in $htmlFiles) {
+            $htmlPath = $htmlFile.FullName
+            $htmlContent = Get-Content -Path $htmlPath -Raw
+            $updated = $false
+            
+            # Update start-your-story.html form submission URL for production
+            if ($htmlFile.Name -eq "start-your-story.html") {
+                $localStartStoryUrl = "http://127.0.0.1:5001/vitae-local/us-central1/handleStartStorySubmission"
+                $productionStartStoryUrl = "https://$Region-$ProjectId.cloudfunctions.net/handleStartStorySubmission"
+                
+                # Update the function URL in the script section
+                $pattern = "const functionUrl = window\.location\.hostname === 'localhost'[^;]+;"
+                $replacement = "const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? '$localStartStoryUrl' : '$productionStartStoryUrl';"
+                
+                if ($htmlContent -match $pattern) {
+                    $htmlContent = $htmlContent -replace $pattern, $replacement
+                    $updated = $true
+                }
+            }
+            
+            # Save updated content if changes were made
+            if ($updated) {
+                $htmlContent | Set-Content -Path $htmlPath -Encoding UTF8
+                Write-Success "Updated $($htmlFile.Name) for production environment"
+            }
+        }
+    }
+}
+
+# Function to start local HTTP server for development
+function Start-LocalHttpServer {
+    Write-Status "Starting local HTTP server for website files..."
+    
+    # Check if Python is available
+    if (Test-Command 'python') {
+        Write-Status "Starting Python HTTP server on port 3000..."
+        $serverCommand = "Write-Host 'Local HTTP Server Starting on http://localhost:3000' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the server.' -ForegroundColor Yellow; cd src; python -m http.server 3000"
+        Start-Process powershell -ArgumentList "-NoExit", "-Command", $serverCommand -WindowStyle Normal
+        Write-Success "Local HTTP server started in separate window"
+    } elseif (Test-Command 'node') {
+        # Fallback to Node.js http-server if available
+        Write-Status "Python not found, checking for Node.js http-server..."
+        try {
+            # Try to install http-server globally if not present
+            $output = npm list -g http-server 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                Write-Status "Installing http-server globally..."
+                npm install -g http-server
+            }
+            
+            Write-Status "Starting Node.js HTTP server on port 3000..."
+            $serverCommand = "Write-Host 'Local HTTP Server Starting on http://localhost:3000' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the server.' -ForegroundColor Yellow; cd src; npx http-server -p 3000"
+            Start-Process powershell -ArgumentList "-NoExit", "-Command", $serverCommand -WindowStyle Normal
+            Write-Success "Local HTTP server started in separate window"
+        }
+        catch {
+            Write-Warning "Could not start Node.js HTTP server. Please manually serve the src/ directory on port 3000"
+        }
+    } else {
+        Write-Warning "Neither Python nor Node.js found. Please manually serve the src/ directory on port 3000"
+        Write-Host "You can use any static file server, for example:" -ForegroundColor Yellow
+        Write-Host "  - Python: cd src && python -m http.server 3000" -ForegroundColor White
+        Write-Host "  - Node.js: cd src && npx http-server -p 3000" -ForegroundColor White
     }
 }
 
@@ -452,6 +560,7 @@ if ($Environment -eq 'prod') {
             Deploy-FirebaseFunctions -Environment $Environment
             Deploy-FirestoreRules -Environment $Environment
             Update-ScriptWithFunctionUrl -Environment $Environment -ProjectId $ProjectId
+            Update-HtmlFilesForLocal -Environment $Environment
             Deploy-FirebaseHosting -Environment $Environment
         }
     }
@@ -467,10 +576,16 @@ if ($Environment -eq 'prod') {
     # Update script.js for local development
     Update-ScriptWithFunctionUrl -Environment $Environment -ProjectId ""
     
+    # Update HTML files for local development
+    Update-HtmlFilesForLocal -Environment $Environment
+    
     # Start Firebase emulators
     if (-not $SkipFirebase) {
         Deploy-FirebaseFunctions -Environment $Environment
     }
+    
+    # Start local HTTP server for the website
+    Start-LocalHttpServer
     
     Write-Success "Local development environment setup complete!"
 }
@@ -482,20 +597,26 @@ Write-Host "=================================================" -ForegroundColor 
 
 if ($Environment -eq 'local') {
     Write-Success "Local development environment is ready!"
-    Write-Host "`nFirebase Emulators are running in a separate window" -ForegroundColor Yellow
+    Write-Host "`nLocal servers are running in separate windows:" -ForegroundColor Yellow
+    Write-Host "- Local HTTP Server (website files)" -ForegroundColor Yellow
+    Write-Host "- Firebase Emulators" -ForegroundColor Yellow
     if (-not $SkipEmulatorCleanup) {
         Write-Host "Note: Any existing emulator processes were stopped before starting new ones" -ForegroundColor Yellow
     } else {
         Write-Host "Note: Emulator cleanup was skipped - existing emulators may still be running" -ForegroundColor Yellow
     }
+    Write-Host "`nLocal Development URLs:" -ForegroundColor Green
+    Write-Host "Website (main site): http://localhost:3000" -ForegroundColor Cyan
     Write-Host "Firebase Emulator UI: http://localhost:4001" -ForegroundColor Cyan
-    Write-Host "Website (hosting): http://localhost:3000" -ForegroundColor Cyan
-    Write-Host "Cloud Function endpoint: http://localhost:5001/vitae-local/us-central1/handleWaitlistSubmission" -ForegroundColor Cyan
+    Write-Host "Waitlist Function: http://127.0.0.1:5001/vitae-local/us-central1/handleWaitlistSubmission" -ForegroundColor Cyan
+    Write-Host "Start Story Function: http://127.0.0.1:5001/vitae-local/us-central1/handleStartStorySubmission" -ForegroundColor Cyan
     Write-Host "Firestore emulator: http://localhost:8081" -ForegroundColor Cyan
     Write-Host "`nTo use the development environment:" -ForegroundColor Yellow
     Write-Host "1. Open http://localhost:3000 in your browser" -ForegroundColor White
     Write-Host "2. Open http://localhost:4001 for Firebase UI" -ForegroundColor White
-    Write-Host "3. Close the emulator window or press Ctrl+C to stop" -ForegroundColor White
+    Write-Host "3. All navigation links will work locally with .html extensions" -ForegroundColor White
+    Write-Host "4. Forms will submit to local Firebase Functions" -ForegroundColor White
+    Write-Host "5. Close both server windows or press Ctrl+C to stop" -ForegroundColor White
 } else {
     Write-Success "Production deployment completed successfully!"
     Write-Host "Project ID: $ProjectId" -ForegroundColor Cyan
