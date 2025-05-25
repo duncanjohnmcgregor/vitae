@@ -1,0 +1,22 @@
+# Act configuration file
+# This file configures how act runs GitHub Actions locally
+
+# Use GitHub's official runner images for better compatibility
+-P ubuntu-latest=ghcr.io/catthehacker/ubuntu:act-latest
+-P ubuntu-22.04=ghcr.io/catthehacker/ubuntu:act-22.04
+-P ubuntu-20.04=ghcr.io/catthehacker/ubuntu:act-20.04
+
+# Enable verbose logging for debugging
+--verbose
+
+# Use host networking for better local development
+--use-gitignore=false
+
+# Set container architecture
+--container-architecture linux/amd64
+
+# Reuse containers for faster subsequent runs
+--reuse
+
+# Set default secrets file location
+--secret-file .env.act 

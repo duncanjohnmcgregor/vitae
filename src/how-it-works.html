@@ -338,7 +338,7 @@
         }
     </style>
 </head>
-<body>
+<body class="page-transition">
     <!-- Navigation -->
     <nav class="nav">        <div class="nav-container">            <div class="nav-brand">                <a href="/" style="text-decoration: none;">                    <div class="logo"> <span class="logo-text">vitae</span> </div>                </a>            </div>            <div class="nav-menu">                <a href="how-it-works.html" class="nav-link">How it works</a>                <a href="pricing.html" class="nav-link">Pricing</a>
                 <a href="start-your-story.html" class="btn btn-primary">Start your story</a>
@@ -517,6 +517,14 @@
                 alert('Join our waitlist! Visit our main page to get started.');
             }
         }
+
+        // Modern Page Load Animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add loaded class for smooth page transition
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 100);
+        });
     </script>
 </body>
 </html> 

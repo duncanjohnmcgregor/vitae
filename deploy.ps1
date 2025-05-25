@@ -40,7 +40,10 @@ param(
     [switch]$SkipEmulatorCleanup,
     
     [Parameter(Mandatory=$false)]
-    [switch]$ConfirmBreakGlass
+    [switch]$ConfirmBreakGlass,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$RunGitHubActions
 )
 
 # Set error action preference
@@ -66,6 +69,9 @@ if ($PSBoundParameters.ContainsKey('?') -or $args -contains '-?' -or $args -cont
     Write-Host "  -SkipTerraform: Skip Terraform deployment" -ForegroundColor White
     Write-Host "  -SkipFirebase: Skip Firebase deployment" -ForegroundColor White
     Write-Host "  -DeployFunctionsOnly: Deploy only Firebase Functions" -ForegroundColor White
+    Write-Host "  -RunGitHubActions: Run GitHub Actions locally before deployment" -ForegroundColor White
+    Write-Host "`nFor enhanced GitHub Actions integration, use:" -ForegroundColor Green
+    Write-Host "  ./deploy-with-act.ps1" -ForegroundColor Cyan
     exit 0
 }
 
@@ -546,9 +552,70 @@ function Start-LocalHttpServer {
     }
 }
 
+# Function to run GitHub Actions locally with act
+function Invoke-GitHubActionsLocally {
+    Write-Status "Running GitHub Actions locally with act..."
+    
+    # Check if act is available
+    try {
+        function act { & "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\nektos.act_Microsoft.Winget.Source_8wekyb3d8bbwe\act.exe" @args }
+        $actVersion = act --version 2>$null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Act command failed"
+        }
+        Write-Status "Using act: $actVersion"
+    }
+    catch {
+        Write-Warning "Act is not installed or not working properly."
+        Write-Host "Install act with: winget install nektos.act" -ForegroundColor Yellow
+        Write-Host "Or use the enhanced script: ./deploy-with-act.ps1" -ForegroundColor Cyan
+        return $false
+    }
+    
+    # Check if Docker is running
+    try {
+        docker info 2>$null | Out-Null
+        if ($LASTEXITCODE -ne 0) {
+            throw "Docker not running"
+        }
+    }
+    catch {
+        Write-Warning "Docker is not running. Act requires Docker to run GitHub Actions locally."
+        Write-Host "Please start Docker Desktop and try again." -ForegroundColor Yellow
+        return $false
+    }
+    
+    Write-Status "Running PR validation workflow locally..."
+    try {
+        act pull_request --workflows .github/workflows/pr-validation.yml
+        if ($LASTEXITCODE -eq 0) {
+            Write-Success "GitHub Actions PR validation passed!"
+            return $true
+        } else {
+            Write-Error "GitHub Actions PR validation failed!"
+            return $false
+        }
+    }
+    catch {
+        Write-Error "Failed to run GitHub Actions: $($_.Exception.Message)"
+        return $false
+    }
+}
+
 # Main deployment logic
 Write-Host "Starting deployment for environment: $Environment" -ForegroundColor Green
 Write-Host "=================================================" -ForegroundColor Green
+
+# Run GitHub Actions locally if requested
+if ($RunGitHubActions) {
+    Write-Status "GitHub Actions local execution requested..."
+    $actSuccess = Invoke-GitHubActionsLocally
+    if (-not $actSuccess) {
+        Write-Error "GitHub Actions validation failed. Stopping deployment."
+        Write-Host "Fix the issues and try again, or run without -RunGitHubActions" -ForegroundColor Yellow
+        exit 1
+    }
+}
 
 if ($Environment -eq 'prod') {
     # BREAK-GLASS WARNING FOR PRODUCTION DEPLOYMENT
