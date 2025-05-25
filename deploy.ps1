@@ -1,5 +1,20 @@
 # Vitae Website Deployment Script (PowerShell)
 # This script automates the deployment of the Vitae landing page using Terraform and Firebase
+#
+# IMPORTANT: Production deployment via this script is for BREAK-GLASS/EMERGENCY use only!
+# 
+# Normal deployment workflow:
+# 1. Create a feature branch: git checkout -b feature/your-feature
+# 2. Make your changes and commit them
+# 3. Push the branch: git push origin feature/your-feature  
+# 4. Open a Pull Request on GitHub
+# 5. After review and approval, merge the PR into main
+# 6. GitHub Actions will automatically deploy to production
+#
+# Only use 'prod' parameter in emergency situations when:
+# - GitHub Actions is down
+# - Critical hotfix needed immediately
+# - CI/CD pipeline is broken and needs immediate bypass
 
 param(
     [Parameter(Mandatory=$false)]
@@ -22,11 +37,37 @@ param(
     [switch]$DeployFunctionsOnly,
     
     [Parameter(Mandatory=$false)]
-    [switch]$SkipEmulatorCleanup
+    [switch]$SkipEmulatorCleanup,
+    
+    [Parameter(Mandatory=$false)]
+    [switch]$ConfirmBreakGlass
 )
 
 # Set error action preference
 $ErrorActionPreference = "Stop"
+
+# Display usage information if help requested
+if ($PSBoundParameters.ContainsKey('?') -or $args -contains '-?' -or $args -contains '-help' -or $args -contains '--help') {
+    Write-Host "`nVitae Deployment Script Usage:" -ForegroundColor Green
+    Write-Host "==============================" -ForegroundColor Green
+    Write-Host "`nFor local development (recommended):" -ForegroundColor Yellow
+    Write-Host "  ./deploy.ps1" -ForegroundColor White
+    Write-Host "  ./deploy.ps1 local" -ForegroundColor White
+    Write-Host "`nFor EMERGENCY production deployment only:" -ForegroundColor Red
+    Write-Host "  ./deploy.ps1 prod -ConfirmBreakGlass" -ForegroundColor Red
+    Write-Host "`nNormal production deployment should use GitHub workflow:" -ForegroundColor Green
+    Write-Host "  1. Create branch, make changes, push" -ForegroundColor White
+    Write-Host "  2. Open Pull Request" -ForegroundColor White
+    Write-Host "  3. Merge after review - auto-deploys via GitHub Actions" -ForegroundColor White
+    Write-Host "`nParameters:" -ForegroundColor Yellow
+    Write-Host "  -Environment: 'local' (default) or 'prod'" -ForegroundColor White
+    Write-Host "  -ConfirmBreakGlass: Required for prod deployment" -ForegroundColor White
+    Write-Host "  -ProjectId: GCP project ID (auto-detected if not provided)" -ForegroundColor White
+    Write-Host "  -SkipTerraform: Skip Terraform deployment" -ForegroundColor White
+    Write-Host "  -SkipFirebase: Skip Firebase deployment" -ForegroundColor White
+    Write-Host "  -DeployFunctionsOnly: Deploy only Firebase Functions" -ForegroundColor White
+    exit 0
+}
 
 # Function to print colored output
 function Write-Status {
@@ -510,6 +551,55 @@ Write-Host "Starting deployment for environment: $Environment" -ForegroundColor 
 Write-Host "=================================================" -ForegroundColor Green
 
 if ($Environment -eq 'prod') {
+    # BREAK-GLASS WARNING FOR PRODUCTION DEPLOYMENT
+    Write-Host "`n🚨 BREAK-GLASS PRODUCTION DEPLOYMENT WARNING 🚨" -ForegroundColor Red -BackgroundColor Yellow
+    Write-Host "=================================================" -ForegroundColor Red
+    Write-Host "You are attempting to deploy directly to PRODUCTION!" -ForegroundColor Red
+    Write-Host "`nThis script should ONLY be used in emergency situations!" -ForegroundColor Red
+    Write-Host "`nNormal deployment process:" -ForegroundColor Yellow
+    Write-Host "1. Create feature branch: git checkout -b feature/your-change" -ForegroundColor White
+    Write-Host "2. Make changes and commit: git commit -am 'Your changes'" -ForegroundColor White
+    Write-Host "3. Push branch: git push origin feature/your-change" -ForegroundColor White
+    Write-Host "4. Open Pull Request on GitHub" -ForegroundColor White
+    Write-Host "5. Get review and approval" -ForegroundColor White
+    Write-Host "6. Merge PR - GitHub Actions deploys automatically" -ForegroundColor White
+    Write-Host "`nOnly use this direct deployment for:" -ForegroundColor Yellow
+    Write-Host "- GitHub Actions is down" -ForegroundColor Red
+    Write-Host "- Critical emergency hotfix needed immediately" -ForegroundColor Red
+    Write-Host "- CI/CD pipeline is broken and needs bypass" -ForegroundColor Red
+    Write-Host "=================================================" -ForegroundColor Red
+    
+    if (-not $ConfirmBreakGlass) {
+        Write-Host "`nTo proceed with emergency deployment, you must:" -ForegroundColor Yellow
+        Write-Host "1. Add -ConfirmBreakGlass parameter to confirm this is an emergency" -ForegroundColor White
+        Write-Host "2. Document the reason in your commit message" -ForegroundColor White
+        Write-Host "3. Create a follow-up PR to track the emergency change" -ForegroundColor White
+        Write-Host "`nExample: ./deploy.ps1 prod -ConfirmBreakGlass" -ForegroundColor Cyan
+        Write-Host "`nAborting deployment for safety." -ForegroundColor Red
+        exit 1
+    }
+    
+    Write-Host "`n⚠️  EMERGENCY DEPLOYMENT CONFIRMED ⚠️" -ForegroundColor Black -BackgroundColor Red
+    $reason = Read-Host "`nPlease enter the emergency reason (this will be logged)"
+    if ([string]::IsNullOrWhiteSpace($reason)) {
+        Write-Host "Emergency reason is required. Aborting deployment." -ForegroundColor Red
+        exit 1
+    }
+    
+    Write-Host "`nEmergency reason: $reason" -ForegroundColor Yellow
+    Write-Host "This deployment will be logged for audit purposes." -ForegroundColor Yellow
+    
+    $confirmation = Read-Host "`nType 'EMERGENCY' to confirm you want to proceed with break-glass deployment"
+    if ($confirmation -ne 'EMERGENCY') {
+        Write-Host "Confirmation failed. Aborting deployment." -ForegroundColor Red
+        exit 1
+    }
+    
+    # Log the emergency deployment
+    $logEntry = "$(Get-Date -Format 'yyyy-MM-dd HH:mm:ss') - EMERGENCY DEPLOYMENT by $env:USERNAME - Reason: $reason"
+    $logEntry | Add-Content -Path "emergency-deployments.log" -Encoding UTF8
+    Write-Host "`nEmergency deployment logged to emergency-deployments.log" -ForegroundColor Yellow
+    Write-Host "=================================================" -ForegroundColor Green
     # Get project ID from terraform config if not provided
     if (-not $ProjectId) {
         $terraformProjectId = Get-TerraformProjectId

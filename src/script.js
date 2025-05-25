@@ -21,6 +21,12 @@ function initButtons() {
     const buttons = document.querySelectorAll('.btn');
     
     buttons.forEach(button => {
+        // Skip buttons that are actually navigation links
+        if (button.tagName === 'A' && button.hasAttribute('href')) {
+            // This is a navigation link, don't add modal behavior
+            return;
+        }
+        
         button.addEventListener('click', function(e) {
             // Add ripple effect
             createRipple(e, this);
@@ -33,12 +39,16 @@ function initButtons() {
                 // Let the natural navigation happen or do nothing
                 return;
             } else if (buttonText.includes('get started')) {
+                e.preventDefault();
                 showModal('waitlist');
             } else if (buttonText.includes('watch demo')) {
+                e.preventDefault();
                 showModal('demo');
             } else if (buttonText.includes('schedule a call')) {
+                e.preventDefault();
                 showModal('schedule');
             } else if (buttonText.includes('learn more')) {
+                e.preventDefault();
                 document.querySelector('#features')?.scrollIntoView({
                     behavior: 'smooth',
                     block: 'start'
@@ -232,6 +242,18 @@ function initScrollEffects() {
 
 // Modal system
 function showModal(type) {
+    // Prevent modal from showing if one is already open
+    if (document.querySelector('.modal-overlay')) {
+        console.log('Modal already open, skipping');
+        return;
+    }
+    
+    // Prevent modal from showing if we're in the middle of navigation
+    if (document.hidden || !document.hasFocus()) {
+        console.log('Page not focused, skipping modal');
+        return;
+    }
+    
     const modals = {
         waitlist: {
             title: '🚀 Join the Waitlist',
@@ -368,9 +390,7 @@ function submitWaitlist() {
     submitButton.textContent = 'Submitting...';
 
     // Get the Cloud Function URL from the environment
-    const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 
-        'http://127.0.0.1:5001/vitae-local/us-central1/handleWaitlistSubmission' : 
-        'https://us-central1-vitae-460717.cloudfunctions.net/handleWaitlistSubmission';
+    const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5001/vitae-local/us-central1/handleWaitlistSubmission' : 'https://us-central1-vitae-460717.cloudfunctions.net/handleWaitlistSubmission';
 
     // Submit the form
     fetch(functionUrl, {
@@ -548,3 +568,4 @@ document.addEventListener('DOMContentLoaded', function() {
     
     console.log('✅ Vitae application initialized successfully');
 });
+
