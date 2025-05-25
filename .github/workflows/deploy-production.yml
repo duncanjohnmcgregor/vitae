@@ -63,11 +63,6 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Setup Google Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-      with:
-        version: 'latest'
-
     - name: Install Dependencies
       run: |
         if (Test-Path "package.json") {
@@ -90,12 +85,19 @@ jobs:
 
     - name: Verify Authentication
       run: |
-        Write-Host "Verifying Google Cloud authentication..."
-        gcloud auth list
-        gcloud config list project
         Write-Host "Verifying Firebase authentication..."
         npx firebase projects:list --token ${{ secrets.FIREBASE_TOKEN }}
+        Write-Host "✅ Firebase authentication verified"
+        
+        Write-Host "Verifying Google Cloud credentials are available..."
+        if ($env:GOOGLE_APPLICATION_CREDENTIALS) {
+          Write-Host "✅ Google Cloud credentials file available at: $env:GOOGLE_APPLICATION_CREDENTIALS"
+        } else {
+          Write-Host "✅ Google Cloud credentials available via auth action"
+        }
       shell: pwsh
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
     - name: Deploy using PowerShell script
       env:
