@@ -1,0 +1,6 @@
+{
+  "projects": {
+    "default": "vitae-local",
+    "prod": "vitae-460717"
+  }
+}

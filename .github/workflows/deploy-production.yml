@@ -89,14 +89,17 @@ jobs:
 
     - name: Configure Firebase Token
       run: |
-        # Use Firebase CI token for authentication and set active project
-        npx firebase use --token ${{ secrets.FIREBASE_TOKEN }} ${{ secrets.GCP_PROJECT_ID }}
+        # Use modern Firebase authentication via service account credentials
+        Write-Host "Setting up Firebase project configuration..."
+        npx firebase use ${{ secrets.GCP_PROJECT_ID }}
       shell: pwsh
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
     - name: Verify Authentication
       run: |
         Write-Host "Verifying Firebase authentication..."
-        npx firebase projects:list --token ${{ secrets.FIREBASE_TOKEN }}
+        npx firebase projects:list
         Write-Host "✅ Firebase authentication verified"
         
         Write-Host "Verifying Google Cloud credentials are available..."

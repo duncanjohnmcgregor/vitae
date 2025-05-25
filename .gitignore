@@ -9,8 +9,6 @@ yarn.lock
 .firebase/
 firebase-debug.log*
 firebase-debug.*.log*
-.firebaserc
-firebase.json
 ui-debug.log*
 
 # Terraform
