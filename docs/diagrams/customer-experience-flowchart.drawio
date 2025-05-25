@@ -1,0 +1,320 @@
+<mxfile host="65bd71144e">
+    <diagram id="V2bz45VR_6kW4HW5PqsE" name="Page-1">
+        <mxGraphModel dx="871" dy="1083" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="3000" math="0" shadow="0">
+            <root>
+                <mxCell id="0"/>
+                <mxCell id="1" parent="0"/>
+                <mxCell id="start" value="START" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="50" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step1_action" value="STEP 1: User Action&lt;br&gt;Lands on homepage, sees guided interviews, editing, and printing info, clicks &#39;Start your story&#39;" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="150" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step1_system" value="STEP 1: System Response&lt;br&gt;Directs to sign-up page with fields for name, email, password" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="150" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step2_action" value="STEP 2: User Action&lt;br&gt;Enters name, email, password, submits sign-up form" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="270" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step2_system" value="STEP 2: System Response&lt;br&gt;Sends email with two-step verification link" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="270" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step2_parallel" value="STEP 2: Parallel Function&lt;br&gt;Validates input data, ensures all fields are filled" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="270" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step3_action" value="STEP 3: User Action&lt;br&gt;Clicks verification link in email" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="370" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step3_system" value="STEP 3: System Response&lt;br&gt;Redirects to chapter library, highlights &#39;New Chapter&#39; option" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="370" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step3_parallel" value="STEP 3: Parallel Function&lt;br&gt;Activates user account in backend" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="370" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step4_action" value="STEP 4: User Action&lt;br&gt;Clicks &#39;New Chapter&#39; in library" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="470" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step4_system" value="STEP 4: System Response&lt;br&gt;Opens simple, Word-like page with &#39;Start telling your story&#39; button" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="470" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step4_parallel" value="STEP 4: Parallel Function&lt;br&gt;Auto-saves draft begins in backend" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="470" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step5_action" value="STEP 5: User Action&lt;br&gt;Clicks &#39;Start telling your story,&#39; records/types story, sees text appear in real-time" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="590" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step5_system" value="STEP 5: System Response&lt;br&gt;Displays text as user speaks/types, auto-saves progress, shows &#39;Draft saved!&#39; notification" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="590" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step5_parallel" value="STEP 5: Parallel Function&lt;br&gt;AI listens for pacing, prepares up to 3 clarifying questions" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="590" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step6_action" value="STEP 6: User Action&lt;br&gt;Pauses or finishes story, clicks &#39;Finish Story&#39; button" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="710" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step6_system" value="STEP 6: System Response&lt;br&gt;Shows &#39;Are you sure you&#39;d like to end this story?&#39; pop-up, saves chapter to library upon confirmation" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="710" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step6_parallel" value="STEP 6: Parallel Function&lt;br&gt;AI detects narrative closure, finalizes draft in backend" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="710" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step7_action" value="STEP 7: User Action (Optional)&lt;br&gt;Clicks &#39;Delete Chapter&#39; in library" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="830" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step7_system" value="STEP 7: System Response&lt;br&gt;Shows &#39;Are you sure?&#39; pop-up, removes chapter upon confirmation" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="830" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step7_parallel" value="STEP 7: Parallel Function&lt;br&gt;Deletes chapter from backend database" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="830" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="repeat_decision" value="Repeat steps 4-6 until satisfied (e.g., 15 chapters)?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+                    <mxGeometry x="325" y="940" width="150" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="step8_action" value="STEP 8: User Action&lt;br&gt;Clicks &#39;Submit for Editing&#39; in library" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="1080" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step8_system" value="STEP 8: System Response&lt;br&gt;Shows &#39;Ready to send all your chapters? You&#39;ll review changes before printing&#39; pop-up, sends chapters to editing team" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="1080" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="step8_parallel" value="STEP 8: Parallel Function&lt;br&gt;Backend queues chapters for professional editing" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="1080" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step9_action" value="STEP 9: User Action&lt;br&gt;Receives email confirming submission" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="1220" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step9_system" value="STEP 9: System Response&lt;br&gt;Email includes &#39;You&#39;ll review changes before printing&#39; reassurance" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="1220" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step9_parallel" value="STEP 9: Parallel Function&lt;br&gt;Editing team processes chapters" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="1220" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step10_action" value="STEP 10: User Action&lt;br&gt;Receives email to review edited chapters, logs into account" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="1320" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step10_system" value="STEP 10: System Response&lt;br&gt;Displays edited chapters with &#39;Approve&#39; or &#39;Request Changes&#39; buttons per chapter" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="1320" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step10_parallel" value="STEP 10: Parallel Function&lt;br&gt;Backend updates chapter status based on user input" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="1320" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step11_action" value="STEP 11: User Action&lt;br&gt;Approves or requests changes for all chapters" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="1440" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step11_system" value="STEP 11: System Response&lt;br&gt;Locks &#39;Add New Chapter&#39; until all edits are approved/resolved, updates library" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="1440" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step11_parallel" value="STEP 11: Parallel Function&lt;br&gt;Backend processes change requests or finalizes approved chapters" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="1440" width="180" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step12_decision" value="Add new chapters after approving all edits?" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+                    <mxGeometry x="325" y="1560" width="150" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="step12_action" value="STEP 12: User Action (Optional)&lt;br&gt;Clicks &#39;Add New Chapter&#39; after approving all edits, repeats steps 4-6" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="1700" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step12_parallel" value="STEP 12: Parallel Function&lt;br&gt;AI and backend handle new chapter creation" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="1820" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step13_action" value="STEP 13: User Action&lt;br&gt;Clicks &#39;Submit for Editing&#39; for new chapters" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="1920" width="200" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step13_system" value="STEP 13: System Response&lt;br&gt;Shows &#39;Ready to send these new chapters for editing?&#39; pop-up, sends new chapters to editing team" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="1920" width="200" height="100" as="geometry"/>
+                </mxCell>
+                <mxCell id="step13_parallel" value="STEP 13: Parallel Function&lt;br&gt;Backend queues new chapters for editing" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="1920" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="step14_action" value="STEP 14: User Action&lt;br&gt;Approves all final edits, clicks &#39;Print My Book&#39; in library" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="300" y="2060" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step14_system" value="STEP 14: System Response&lt;br&gt;Shows &#39;Ready to finalize and print your book?&#39; pop-up, sends to printing process" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="50" y="2060" width="200" height="80" as="geometry"/>
+                </mxCell>
+                <mxCell id="step14_parallel" value="STEP 14: Parallel Function&lt;br&gt;Backend prepares book for printing" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="550" y="2060" width="180" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="end" value="END&lt;br&gt;Book Printed!" style="ellipse;whiteSpace=wrap;html=1;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;" vertex="1" parent="1">
+                    <mxGeometry x="350" y="2180" width="100" height="60" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="start" target="step1_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step1_action" target="step2_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step2_action" target="step3_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step3_action" target="step4_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step4_action" target="step5_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step5_action" target="step6_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step6_action" target="step7_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step7_action" target="repeat_decision">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_repeat_yes" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.5;curved=1;" edge="1" parent="1" source="repeat_decision" target="step4_action">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="280" y="990"/>
+                            <mxPoint x="280" y="500"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="yes_repeat" value="Yes" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="290" y="970" width="30" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="repeat_decision" target="step8_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="no_repeat" value="No&lt;br&gt;(Satisfied)" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="420" y="1020" width="50" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step8_action" target="step9_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step9_action" target="step10_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step10_action" target="step11_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step11_action" target="step12_decision">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step12_decision" target="step12_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="yes_new_chapters" value="Yes" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="280" y="1650" width="30" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow_new_loop" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;exitX=0;exitY=0.5;entryX=0;entryY=0.5;curved=1;" edge="1" parent="1" source="step12_action" target="step4_action">
+                    <mxGeometry relative="1" as="geometry">
+                        <Array as="points">
+                            <mxPoint x="20" y="1740"/>
+                            <mxPoint x="20" y="500"/>
+                        </Array>
+                    </mxGeometry>
+                </mxCell>
+                <mxCell id="arrow15" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step12_decision" target="step13_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="no_new_chapters" value="No" style="text;html=1;align=center;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="420" y="1800" width="30" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow16" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step13_action" target="step14_action">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="arrow17" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;" edge="1" parent="1" source="step14_action" target="end">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow1" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step1_action" target="step1_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step2_action" target="step2_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step3_action" target="step3_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step4_action" target="step4_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step5_action" target="step5_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step6_action" target="step6_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step7_action" target="step7_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step8_action" target="step8_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step9_action" target="step9_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step10_action" target="step10_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step11_action" target="step11_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step13_action" target="step13_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="system_arrow14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;exitX=0;exitY=0.5;" edge="1" parent="1" source="step14_action" target="step14_system">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow2" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step2_action" target="step2_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow3" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step3_action" target="step3_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow4" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step4_action" target="step4_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow5" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step5_action" target="step5_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow6" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step6_action" target="step6_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow7" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step7_action" target="step7_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow8" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step8_action" target="step8_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow9" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step9_action" target="step9_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow10" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step10_action" target="step10_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow11" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step11_action" target="step11_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow12" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step12_action" target="step12_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow13" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step13_action" target="step13_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="parallel_arrow14" style="edgeStyle=orthogonalEdgeStyle;rounded=0;orthogonalLoop=1;jettySize=auto;html=1;dashed=1;" edge="1" parent="1" source="step14_action" target="step14_parallel">
+                    <mxGeometry relative="1" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_title" value="Legend:" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;fontStyle=1;fontSize=16;" vertex="1" parent="1">
+                    <mxGeometry x="800" y="50" width="80" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_user" value="User Action" style="whiteSpace=wrap;html=1;fillColor=#fff2cc;strokeColor=#d6b656;" vertex="1" parent="1">
+                    <mxGeometry x="800" y="90" width="100" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_system" value="System Response&lt;br&gt;(Parallel Process)" style="whiteSpace=wrap;html=1;fillColor=#dae8fc;strokeColor=#6c8ebf;" vertex="1" parent="1">
+                    <mxGeometry x="920" y="90" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_parallel" value="Parallel Function" style="whiteSpace=wrap;html=1;fillColor=#f8cecc;strokeColor=#b85450;" vertex="1" parent="1">
+                    <mxGeometry x="800" y="160" width="100" height="30" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_decision" value="Decision Point" style="rhombus;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;" vertex="1" parent="1">
+                    <mxGeometry x="920" y="160" width="100" height="50" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_flow" value="—— Main Flow" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="800" y="230" width="100" height="20" as="geometry"/>
+                </mxCell>
+                <mxCell id="legend_parallel_line" value="- - - Parallel Process" style="text;html=1;align=left;verticalAlign=middle;whiteSpace=wrap;rounded=0;" vertex="1" parent="1">
+                    <mxGeometry x="920" y="230" width="120" height="20" as="geometry"/>
+                </mxCell>
+            </root>
+        </mxGraphModel>
+    </diagram>
+</mxfile>
