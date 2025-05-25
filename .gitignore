@@ -32,6 +32,9 @@ waitlist-function.zip
 .env.test
 .env.production
 
+# Act secrets file (contains local testing secrets)
+.env.act
+
 # IDE and Editor files
 .idea/
 .vscode/

@@ -433,7 +433,7 @@
         }
     </style>
 </head>
-<body>
+<body class="page-transition">
     <!-- Navigation -->
     <nav class="nav">
         <div class="nav-container">
@@ -595,6 +595,14 @@
         AOS.init({
             duration: 800,
             once: true
+        });
+
+        // Modern Page Load Animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add loaded class for smooth page transition
+            setTimeout(() => {
+                document.body.classList.add('loaded');
+            }, 100);
         });
     </script>
 </body>
