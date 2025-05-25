@@ -23,11 +23,28 @@
 
 ## 🚀 **Quick Start**
 
+### **Normal Development Workflow (Recommended)**
+```bash
+# 1. Create feature branch
+git checkout -b feature/your-feature-name
+
+# 2. Make your changes and test locally
+.\deploy.ps1  # Starts local development environment
+
+# 3. Commit and push
+git add .
+git commit -m "Your feature description"
+git push origin feature/your-feature-name
+
+# 4. Open Pull Request on GitHub
+# 5. After review and approval, merge PR
+# 6. GitHub Actions automatically deploys to production
+```
+
+### **Emergency Production Deployment (Break-Glass Only)**
 ```powershell
-# Clone and deploy to production in 3 commands
-git clone <your-repo>
-cd vitae
-.\deploy.ps1 -Environment prod
+# ⚠️ ONLY for emergencies when GitHub Actions is down
+.\deploy.ps1 prod -ConfirmBreakGlass
 ```
 
 **📖 For detailed setup instructions, see [DEPLOYMENT.md](DEPLOYMENT.md)**
@@ -145,10 +162,15 @@ vitae/
 
    ### **Deployment Commands**
 
-   **🎯 Production Deployment (Automatic):**
+   **🎯 Production Deployment (Emergency Only):**
    ```powershell
-   # Deploy everything - uses project ID from terraform.tfvars automatically
-   .\deploy.ps1 -Environment prod
+   # ⚠️ BREAK-GLASS: Only for emergencies when GitHub Actions is down
+   .\deploy.ps1 prod -ConfirmBreakGlass
+   
+   # Normal production deployment happens via GitHub Actions:
+   # 1. Create branch, make changes, push
+   # 2. Open Pull Request  
+   # 3. Merge after review - auto-deploys
    ```
 
    **🛠️ Local Development:**
@@ -318,5 +340,6 @@ vitae/
 
 
 
-v i t a e  
+v i t a e 
+ 
  

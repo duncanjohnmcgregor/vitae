@@ -86,3 +86,6 @@ $RECYCLE.BIN/
 service-account-key.json 
 # Service account key file (never commit!)
 github-actions-key.json
+
+# Emergency deployment logs (for audit trail but not committed)
+emergency-deployments.log
