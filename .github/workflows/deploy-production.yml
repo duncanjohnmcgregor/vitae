@@ -63,17 +63,27 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Install Dependencies
+    - name: Install Root Dependencies
       run: |
         if (Test-Path "package.json") {
-          Write-Host "Installing root dependencies..."
-          npm ci
+          Write-Host "Installing root dependencies (including Firebase CLI)..."
+          npm ci --prefer-offline --no-audit --no-fund --silent
+          Write-Host "✅ Root dependencies installed"
+        } else {
+          Write-Host "No root package.json found, skipping root dependencies"
         }
+      shell: pwsh
+
+    - name: Install Functions Dependencies  
+      run: |
         if (Test-Path "functions/package.json") {
           Write-Host "Installing functions dependencies..."
           Set-Location functions
-          npm ci
+          npm ci --prefer-offline --no-audit --no-fund --silent
           Set-Location ..
+          Write-Host "✅ Functions dependencies installed"
+        } else {
+          Write-Host "No functions package.json found, skipping functions dependencies"
         }
       shell: pwsh
 
