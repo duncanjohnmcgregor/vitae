@@ -22,6 +22,7 @@ on:
 env:
   NODE_VERSION: '18'
   PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
 
 jobs:
   # Pre-deployment validation (fast parallel checks)
@@ -107,6 +108,7 @@ jobs:
         path: |
           functions/node_modules
           ~/.npm
+          ~/.cache/firebase
         key: ${{ steps.cache-key.outputs.key }}
         restore-keys: |
           deploy-${{ runner.os }}-${{ env.NODE_VERSION }}-
@@ -145,11 +147,11 @@ jobs:
     - name: Configure Firebase Project
       run: |
         echo "🔧 Configuring Firebase project..."
+        # Use service account authentication
+        export GOOGLE_APPLICATION_CREDENTIALS="${{ steps.auth.outputs.credentials_file_path }}"
         firebase use ${{ env.PROJECT_ID }}
         firebase projects:list
         echo "✅ Firebase project configured for ${{ env.PROJECT_ID }}"
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
   # Parallel deployment jobs
   deploy-functions:
@@ -169,6 +171,7 @@ jobs:
         node-version: ${{ env.NODE_VERSION }}
 
     - name: Authenticate to Google Cloud
+      id: auth
       id: auth
       uses: google-github-actions/auth@v2
       with:
@@ -214,11 +217,15 @@ jobs:
     - name: Deploy Firebase Functions
       run: |
         echo "⚡ Deploying Firebase Functions..."
+        # Set up authentication
+        export GOOGLE_APPLICATION_CREDENTIALS="${{ steps.auth.outputs.credentials_file_path }}"
+        
+        # Configure Firebase project
         firebase use ${{ needs.setup-deployment.outputs.project-id }}
+        
+        # Deploy functions
         firebase deploy --only functions --project ${{ needs.setup-deployment.outputs.project-id }} --force
         echo "✅ Firebase Functions deployed successfully"
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
   deploy-firestore:
     name: 🗄️ Deploy Firestore
@@ -237,40 +244,31 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Restore Firebase CLI cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/firebase
-          /usr/local/lib/node_modules/firebase-tools
-          /usr/local/bin/firebase
-        key: ${{ needs.setup-deployment.outputs.firebase-cache-key }}
-
-    - name: Verify Firebase CLI
-      run: |
-        echo "🔍 Verifying Firebase CLI..."
-        if ! command -v firebase &> /dev/null; then
-          echo "❌ Firebase CLI not found in cache, installing..."
-          npm install -g firebase-tools
-        fi
-        firebase --version
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
 
     - name: Deploy Firestore Rules
       run: |
         echo "🗄️ Deploying Firestore rules..."
+        # Set up authentication
+        export GOOGLE_APPLICATION_CREDENTIALS="${{ steps.auth.outputs.credentials_file_path }}"
+        
+        # Configure Firebase project
         firebase use ${{ needs.setup-deployment.outputs.project-id }}
+        
+        # Deploy Firestore rules
         firebase deploy --only firestore:rules --project ${{ needs.setup-deployment.outputs.project-id }}
         echo "✅ Firestore rules deployed successfully"
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
     - name: Deploy Firestore Indexes
       run: |
         echo "📊 Deploying Firestore indexes..."
+        # Set up authentication
+        export GOOGLE_APPLICATION_CREDENTIALS="${{ steps.auth.outputs.credentials_file_path }}"
+        
+        # Deploy indexes (if any exist)
         firebase deploy --only firestore:indexes --project ${{ needs.setup-deployment.outputs.project-id }} || echo "⚠️ No indexes to deploy"
         echo "✅ Firestore indexes deployment completed"
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
   deploy-hosting:
     name: 🌐 Deploy Hosting
@@ -289,32 +287,21 @@ jobs:
       with:
         credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-    - name: Restore Firebase CLI cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.cache/firebase
-          /usr/local/lib/node_modules/firebase-tools
-          /usr/local/bin/firebase
-        key: ${{ needs.setup-deployment.outputs.firebase-cache-key }}
-
-    - name: Verify Firebase CLI
-      run: |
-        echo "🔍 Verifying Firebase CLI..."
-        if ! command -v firebase &> /dev/null; then
-          echo "❌ Firebase CLI not found in cache, installing..."
-          npm install -g firebase-tools
-        fi
-        firebase --version
+    - name: Install Firebase CLI
+      run: npm install -g firebase-tools
 
     - name: Deploy Firebase Hosting
       run: |
         echo "🌐 Deploying Firebase Hosting..."
+        # Set up authentication
+        export GOOGLE_APPLICATION_CREDENTIALS="${{ steps.auth.outputs.credentials_file_path }}"
+        
+        # Configure Firebase project
         firebase use ${{ needs.setup-deployment.outputs.project-id }}
+        
+        # Deploy hosting
         firebase deploy --only hosting --project ${{ needs.setup-deployment.outputs.project-id }}
         echo "✅ Firebase Hosting deployed successfully"
-      env:
-        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
   # Post-deployment verification and notification
   verify-deployment:
