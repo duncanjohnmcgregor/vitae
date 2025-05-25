@@ -569,3 +569,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('✅ Vitae application initialized successfully');
 });
 
+
+
+
