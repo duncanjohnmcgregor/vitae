@@ -73,8 +73,8 @@ jobs:
 
     - name: Configure Firebase Token
       run: |
-        # Use Firebase CI token for authentication
-        firebase use --token ${{ secrets.FIREBASE_TOKEN }} --add --label prod ${{ secrets.GCP_PROJECT_ID }}
+        # Use Firebase CI token for authentication and set active project
+        firebase use --token ${{ secrets.FIREBASE_TOKEN }} ${{ secrets.GCP_PROJECT_ID }}
       shell: pwsh
 
     - name: Verify Authentication
