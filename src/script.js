@@ -1,47 +1,22 @@
 ﻿// Modern JavaScript for Vitae Landing Page
-document.addEventListener('DOMContentLoaded', function() {    // Initialize all interactions (disabled hero carousel and audio for text testimonials)    initNavigation();    initButtons();    initAnimations();    initScrollEffects();        // Load hero testimonials immediately    loadInitialTestimonials();        // Initialize AOS for all sections (not just mobile cards)    if (typeof AOS !== 'undefined') {        AOS.init({            duration: 600,            easing: 'ease-out-cubic',            once: true,            offset: 50        });    }});// Load initial testimonials immediatelyfunction loadInitialTestimonials() {    console.log('🔄 Loading initial testimonials...');        // Wait a bit to ensure DOM is fully ready    setTimeout(() => {        const testimonials = [            {                name: "Margaret Thompson",                age: 82,                text: "My grandkids always ask about my life. They want to know what it was like growing up on the farm. I've always wanted to write my stories down for them. With some help, I did it. Now it's not just about the past. It's about giving them something to remember me by. Writing my memories felt good. It was like making a connection to the future. I hope they'll read it and feel like they know me better."            },            {                name: "Harold Williams",                 age: 79,                text: "After my wife died, I had too many thoughts in my head. I've wanted to write my story for a long time. It started as something to do, but with help, it became more. I remembered the good times, like our trips, and the hard times, like my mistakes. It helped me understand myself better. Now my kids can see where they come from. It feels good to have done it."            },            {                name: "Eleanor Martinez",                age: 76,                text: "I have a big family, but we're spread out now. I've always wanted to write my life story to bring us closer together. With some help, I got it done. Sharing stories about growing up in Brooklyn or meeting their granddad got everyone talking. We laughed at the funny parts and cried over the tough ones. It's like I gave them a piece of me. Now they have stories to pass on too. That means a lot to me."            },            {                name: "Robert Chen",                age: 84,                text: "Lately, my memory's been slipping. Little things like the taste of my mom's apple pie or the sound of my old radio shows are fading. I was scared they'd be gone forever if I didn't write them down. With some help, I started putting them on paper. It felt like catching something special. It's not just for me. I want my nieces to know what life was like back then. I'm glad those moments are safe now."            },            {                name: "Dorothy Jackson",                age: 81,                text: "I grew up during big times, like the Civil Rights marches and the moon landing. I saw it all from my little town. I've always wanted to write my story to tell it how I saw it. With some help, I finally did. It's not just the history stuff. It's the everyday things too, like raising three kids on almost nothing. I wrote it for my family and for me, to say I was here. It feels really good."            },            {                name: "Frank Morrison",                age: 77,                text: "I don't have much to leave behind, no fancy jewelry or big house. But I've got plenty of stories. I've always thought writing them down would be like making something special. With a little push, I did it. It's like a gift for my kids and grandkids, full of memories from my nursing days and quiet nights with my cats. I hope they'll keep it close one day. It shows who I was."            },            {                name: "Ruth Patterson",                age: 73,                text: "I've always imagined that writing my story would be like taking a long walk through my past. With some guidance, I took that walk. I laughed remembering how I wrecked my first car, and I got teary thinking about friends who've passed. It wasn't just about saving those moments. It was about feeling them again. I want my family to read it and see the real me, not just the old lady they know now. It's been a joy to do this."            },            {                name: "Samuel Davis",                age: 85,                text: "My life has had its share of highs and lows, from lost jobs to cross-country moves. I've long wanted to write about it to understand how those struggles shaped me. With some support, I accomplished that goal. I even wondered if it might help others too. My sons rarely seek my advice, but now they have my experiences in writing. It proves you can falter and still thrive. It's my way of guiding them beyond my years."            },            {                name: "Grace Wilson",                age: 80,                text: "I often pondered whether my life warranted a written record, just an average woman laboring at the factory and raising a family. Yet at 80, with encouragement, I chose to proceed. The process was revelatory, unearthing memories and illuminating my journey's scope. My daughter assisted with transcribing, and we shared laughter and tears along the way. It's imperfect but authentically mine. I take pride in its creation, and that suffices as justification."            },            {                name: "Arthur Hughes",                age: 87,                text: "At 87, I've lived a rich existence, replete with moments of beauty and others tempered by hardship. I've long believed that documenting my autobiography would serve as an expression of gratitude for it all. With thoughtful assistance, I brought this vision to life. It honors the loved ones I've held dear, the places I've inhabited, and the trials that fortified my spirit. While crafted for my family's legacy, it also fulfills a personal need to celebrate my life's entirety. That fulfillment is beyond measure."            }        ];        // Get 3 random testimonials        const shuffled = testimonials.sort(() => 0.5 - Math.random());        const selectedTestimonials = shuffled.slice(0, 3);                // Find testimonial cards        const testimonialCards = document.querySelectorAll('.hero-testimonials-container .testimonial-card');        console.log(`🔍 Found ${testimonialCards.length} testimonial cards`);                if (testimonialCards.length === 0) {            console.error('❌ No testimonial cards found!');            return;        }                // Update each card        testimonialCards.forEach((card, index) => {            if (selectedTestimonials[index]) {                const testimonial = selectedTestimonials[index];                const nameElement = card.querySelector('.testimonial-name');                const ageElement = card.querySelector('.testimonial-age');                const textElement = card.querySelector('.testimonial-text');                                console.log(`📝 Updating card ${index + 1}:`, {                    name: testimonial.name,                    nameElement: !!nameElement,                    ageElement: !!ageElement,                    textElement: !!textElement                });                                if (nameElement) nameElement.textContent = testimonial.name;                if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;                                // Try multiple ways to update the text                if (textElement) {                    textElement.textContent = `"${testimonial.text}"`;                    textElement.innerHTML = `"${testimonial.text}"`;                    console.log(`✅ Updated text for ${testimonial.name}`);                } else {                    console.error(`❌ Could not find text element for card ${index + 1}`);                    // Try finding it with different selectors                    const altTextElement = card.querySelector('p') || card.querySelector('.story-text');                    if (altTextElement) {                        altTextElement.textContent = `"${testimonial.text}"`;                        console.log(`✅ Updated text via alternative selector for ${testimonial.name}`);                    }                }            }        });                console.log('✅ Initial testimonials loaded successfully!');                // Set up the cycling after initial load        setInterval(() => {            const newShuffled = testimonials.sort(() => 0.5 - Math.random());            const newSelected = newShuffled.slice(0, 3);                        testimonialCards.forEach((card, index) => {                if (newSelected[index]) {                    card.classList.add('fade-out');                                        setTimeout(() => {                        const testimonial = newSelected[index];                        const nameElement = card.querySelector('.testimonial-name');                        const ageElement = card.querySelector('.testimonial-age');                        const textElement = card.querySelector('.testimonial-text');                                                if (nameElement) nameElement.textContent = testimonial.name;                        if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;                                                // Try multiple ways to update the text                        if (textElement) {                            textElement.textContent = `"${testimonial.text}"`;                            textElement.innerHTML = `"${testimonial.text}"`;                        } else {                            const altTextElement = card.querySelector('p') || card.querySelector('.story-text');                            if (altTextElement) {                                altTextElement.textContent = `"${testimonial.text}"`;                            }                        }                                                card.classList.remove('fade-out');                        card.classList.add('fade-in');                                                setTimeout(() => {                            card.classList.remove('fade-in');                        }, 500);                    }, 250);                }            });        }, 5000); // 5 second intervals for testing - was 60000}
+document.addEventListener('DOMContentLoaded', function() {    // Initialize all interactions (disabled hero carousel and audio for text testimonials)    initNavigation();    initButtons();    initAnimations();    initScrollEffects();        // Load hero testimonials immediately    loadInitialTestimonials();        // Initialize AOS for all sections (not just mobile cards)    if (typeof AOS !== 'undefined') {        AOS.init({            duration: 600,            easing: 'ease-out-cubic',            once: true,            offset: 50        });    }});// Load initial testimonials immediatelyfunction loadInitialTestimonials() {    console.log('🔄 Loading initial testimonials...');        // Wait a bit to ensure DOM is fully ready    setTimeout(() => {        const testimonials = [            {                name: "Margaret Thompson",                age: 82,                text: "My grandkids always ask about my life. They want to know what it was like growing up on the farm. I've always wanted to write my stories down for them. With some help, I did it. Now it's not just about the past. It's about giving them something to remember me by. Writing my memories felt good. It was like making a connection to the future. I hope they'll read it and feel like they know me better."            },            {                name: "Harold Williams",                 age: 79,                text: "After my wife died, I had too many thoughts in my head. I've wanted to write my story for a long time. It started as something to do, but with help, it became more. I remembered the good times, like our trips, and the hard times, like my mistakes. It helped me understand myself better. Now my kids can see where they come from. It feels good to have done it."            },            {                name: "Eleanor Martinez",                age: 76,                text: "I have a big family, but we're spread out now. I've always wanted to write my life story to bring us closer together. With some help, I got it done. Sharing stories about growing up in Brooklyn or meeting their granddad got everyone talking. We laughed at the funny parts and cried over the tough ones. It's like I gave them a piece of me. Now they have stories to pass on too. That means a lot to me."            },            {                name: "Robert Chen",                age: 84,                text: "Lately, my memory's been slipping. Little things like the taste of my mom's apple pie or the sound of my old radio shows are fading. I was scared they'd be gone forever if I didn't write them down. With some help, I started putting them on paper. It felt like catching something special. It's not just for me. I want my nieces to know what life was like back then. I'm glad those moments are safe now."            },            {                name: "Dorothy Jackson",                age: 81,                text: "I grew up during big times, like the Civil Rights marches and the moon landing. I saw it all from my little town. I've always wanted to write my story to tell it how I saw it. With some help, I finally did. It's not just the history stuff. It's the everyday things too, like raising three kids on almost nothing. I wrote it for my family and for me, to say I was here. It feels really good."            },            {                name: "Frank Morrison",                age: 77,                text: "I don't have much to leave behind, no fancy jewelry or big house. But I've got plenty of stories. I've always thought writing them down would be like making something special. With a little push, I did it. It's like a gift for my kids and grandkids, full of memories from my nursing days and quiet nights with my cats. I hope they'll keep it close one day. It shows who I was."            },            {                name: "Ruth Patterson",                age: 73,                text: "I've always imagined that writing my story would be like taking a long walk through my past. With some guidance, I took that walk. I laughed remembering how I wrecked my first car, and I got teary thinking about friends who've passed. It wasn't just about saving those moments. It was about feeling them again. I want my family to read it and see the real me, not just the old lady they know now. It's been a joy to do this."            },            {                name: "Samuel Davis",                age: 85,                text: "My life has had its share of highs and lows, from lost jobs to cross-country moves. I've long wanted to write about it to understand how those struggles shaped me. With some support, I accomplished that goal. I even wondered if it might help others too. My sons rarely seek my advice, but now they have my experiences in writing. It proves you can falter and still thrive. It's my way of guiding them beyond my years."            },            {                name: "Grace Wilson",                age: 80,                text: "I often pondered whether my life warranted a written record, just an average woman laboring at the factory and raising a family. Yet at 80, with encouragement, I chose to proceed. The process was revelatory, unearthing memories and illuminating my journey's scope. My daughter assisted with transcribing, and we shared laughter and tears along the way. It's imperfect but authentically mine. I take pride in its creation, and that suffices as justification."            },            {                name: "Arthur Hughes",                age: 87,                text: "At 87, I've lived a rich existence, replete with moments of beauty and others tempered by hardship. I've long believed that documenting my autobiography would serve as an expression of gratitude for it all. With thoughtful assistance, I brought this vision to life. It honors the loved ones I've held dear, the places I've inhabited, and the trials that fortified my spirit. While crafted for my family's legacy, it also fulfills a personal need to celebrate my life's entirety. That fulfillment is beyond measure."            }        ];        // Get 3 random testimonials        const shuffled = testimonials.sort(() => 0.5 - Math.random());        const selectedTestimonials = shuffled.slice(0, 3);                // Find testimonial cards        const testimonialCards = document.querySelectorAll('.hero-testimonials-container .testimonial-card');        console.log(`🔍 Found ${testimonialCards.length} testimonial cards`);                if (testimonialCards.length === 0) {            console.error('❌ No testimonial cards found!');            return;        }                // Update each card        testimonialCards.forEach((card, index) => {            if (selectedTestimonials[index]) {                const testimonial = selectedTestimonials[index];                const nameElement = card.querySelector('.testimonial-name');                const ageElement = card.querySelector('.testimonial-age');                const textElement = card.querySelector('.testimonial-text');                                console.log(`📝 Updating card ${index + 1}:`, {                    name: testimonial.name,                    nameElement: !!nameElement,                    ageElement: !!ageElement,                    textElement: !!textElement                });                                if (nameElement) nameElement.textContent = testimonial.name;                if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;                                // Try multiple ways to update the text                if (textElement) {                    textElement.textContent = `"${testimonial.text}"`;                    textElement.innerHTML = `"${testimonial.text}"`;                    console.log(`✅ Updated text for ${testimonial.name}`);                } else {                    console.error(`❌ Could not find text element for card ${index + 1}`);                    // Try finding it with different selectors                    const altTextElement = card.querySelector('p') || card.querySelector('.story-text');                    if (altTextElement) {                        altTextElement.textContent = `"${testimonial.text}"`;                        console.log(`✅ Updated text via alternative selector for ${testimonial.name}`);                    }                }            }        });                console.log('✅ Initial testimonials loaded successfully!');                // Set up the cycling after initial load        setInterval(() => {            const newShuffled = testimonials.sort(() => 0.5 - Math.random());            const newSelected = newShuffled.slice(0, 3);                        testimonialCards.forEach((card, index) => {                if (newSelected[index]) {                    card.classList.add('fade-out');                                        setTimeout(() => {                        const testimonial = newSelected[index];                        const nameElement = card.querySelector('.testimonial-name');                        const ageElement = card.querySelector('.testimonial-age');                        const textElement = card.querySelector('.testimonial-text');                                                if (nameElement) nameElement.textContent = testimonial.name;                        if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;                                                // Try multiple ways to update the text                        if (textElement) {                            textElement.textContent = `"${testimonial.text}"`;                            textElement.innerHTML = `"${testimonial.text}"`;                        } else {                            const altTextElement = card.querySelector('p') || card.querySelector('.story-text');                            if (altTextElement) {                                altTextElement.textContent = `"${testimonial.text}"`;                            }                        }                                                card.classList.remove('fade-out');                        card.classList.add('fade-in');                                                setTimeout(() => {                            card.classList.remove('fade-in');                        }, 500);                    }, 250);                }            });        }, 60000); // 1 minute intervals            }, 100); // Small delay to ensure DOM is ready}
 
 // Navigation functionality
 function initNavigation() {
-    const navLinks = document.querySelectorAll('a[href^="#"]');
-    
-    navLinks.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            const targetId = this.getAttribute('href');
-            const targetSection = document.querySelector(targetId);
-            
-            if (targetSection) {
-                const headerOffset = 80;
-                const elementPosition = targetSection.getBoundingClientRect().top;
-                const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-
-                window.scrollTo({
-                    top: offsetPosition,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
+    const nav = document.querySelector('.nav');
+    if (!nav) return;
 
     // Add scroll effect to navigation
-    let lastScrollTop = 0;
-    const nav = document.querySelector('.nav');
-    
     window.addEventListener('scroll', () => {
-        const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
-        
-        if (scrollTop > lastScrollTop && scrollTop > 100) {
-            nav.style.transform = 'translateY(-100%)';
+        if (window.scrollY > 50) {
+            nav.classList.add('scrolled');
         } else {
-            nav.style.transform = 'translateY(0)';
+            nav.classList.remove('scrolled');
         }
-        
-        lastScrollTop = scrollTop;
     });
 }
 
-// Button interactions
+// Button functionality
 function initButtons() {
     const buttons = document.querySelectorAll('.btn');
     
@@ -53,9 +28,9 @@ function initButtons() {
             // Handle different button actions
             const buttonText = this.textContent.toLowerCase();
             
-            // Skip modal for "Start your story" buttons that have href attributes (navigation links)
-            if (this.hasAttribute('href') && buttonText.includes('start your story')) {
-                // Let the natural navigation happen
+            // Skip modal for ALL "Start your story" buttons - they should navigate naturally
+            if (buttonText.includes('start your story')) {
+                // Let the natural navigation happen or do nothing
                 return;
             } else if (buttonText.includes('get started')) {
                 showModal('waitlist');
@@ -109,9 +84,6 @@ function initAnimations() {
     
     // Initialize testimonial carousel
     initTestimonialCarousel();
-    
-    // Initialize hero testimonials cycling
-    // initHeroTestimonials(); // REMOVED: This conflicts with loadInitialTestimonials() which already handles hero testimonials
 }
 
 function animateHeroCards() {
@@ -178,7 +150,6 @@ function initTestimonialCarousel() {
 
     function updateCarousel() {
         // Move the entire grid to show the current card
-        // Each card + gap takes up exactly one viewport width
         const translatePercentage = currentIndex * 33.333;
         testimonialsGrid.style.transform = `translateX(-${translatePercentage}%)`;
         
@@ -215,51 +186,14 @@ function initTestimonialCarousel() {
         autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
     });
 
-    // Touch/swipe functionality for mobile
-    let startX = 0;
-    let isDragging = false;
-
-    testimonialsGrid.addEventListener('touchstart', (e) => {
-        startX = e.touches[0].clientX;
-        isDragging = true;
-        clearInterval(autoplayInterval);
-    });
-
-    testimonialsGrid.addEventListener('touchmove', (e) => {
-        if (!isDragging) return;
-        e.preventDefault();
-    });
-
-    testimonialsGrid.addEventListener('touchend', (e) => {
-        if (!isDragging) return;
-        isDragging = false;
-        
-        const endX = e.changedTouches[0].clientX;
-        const diffX = startX - endX;
-        
-        // Minimum swipe distance to trigger slide change
-        if (Math.abs(diffX) > 50) {
-            if (diffX > 0) {
-                // Swipe left - go to next slide
-                goToSlide(currentIndex + 1);
-            } else {
-                // Swipe right - go to previous slide
-                goToSlide(currentIndex - 1);
-            }
-        }
-        
-        // Restart autoplay
-        autoplayInterval = setInterval(() => goToSlide(currentIndex + 1), 5000);
-    });
-
-    // Clean up any scroll animation styles that might interfere
-    cards.forEach(card => {
-        card.style.opacity = '';
-        card.style.transform = '';
-        card.style.transition = '';
-    });
+    // Initialize carousel
+    updateCarousel();
     
-        // Initialize carousel    updateCarousel();        // Ensure first card is active on load    if (cards.length > 0) {        cards[0].classList.add('active');    }}// Hero testimonials cycling systemfunction initHeroTestimonials() {    // Testimonials data    const testimonials = [        {            name: "Margaret Thompson",            age: 82,            text: "My grandkids always ask about my life. They want to know what it was like growing up on the farm. I've always wanted to write my stories down for them. With some help, I did it. Now it's not just about the past. It's about giving them something to remember me by. Writing my memories felt good. It was like making a connection to the future. I hope they'll read it and feel like they know me better."        },        {            name: "Harold Williams",             age: 79,            text: "After my wife died, I had too many thoughts in my head. I've wanted to write my story for a long time. It started as something to do, but with help, it became more. I remembered the good times, like our trips, and the hard times, like my mistakes. It helped me understand myself better. Now my kids can see where they come from. It feels good to have done it."        },        {            name: "Eleanor Martinez",            age: 76,            text: "I have a big family, but we're spread out now. I've always wanted to write my life story to bring us closer together. With some help, I got it done. Sharing stories about growing up in Brooklyn or meeting their granddad got everyone talking. We laughed at the funny parts and cried over the tough ones. It's like I gave them a piece of me. Now they have stories to pass on too. That means a lot to me."        },        {            name: "Robert Chen",            age: 84,            text: "Lately, my memory's been slipping. Little things like the taste of my mom's apple pie or the sound of my old radio shows are fading. I was scared they'd be gone forever if I didn't write them down. With some help, I started putting them on paper. It felt like catching something special. It's not just for me. I want my nieces to know what life was like back then. I'm glad those moments are safe now."        },        {            name: "Dorothy Jackson",            age: 81,            text: "I grew up during big times, like the Civil Rights marches and the moon landing. I saw it all from my little town. I've always wanted to write my story to tell it how I saw it. With some help, I finally did. It's not just the history stuff. It's the everyday things too, like raising three kids on almost nothing. I wrote it for my family and for me, to say I was here. It feels really good."        },        {            name: "Betty Morrison",            age: 78,            text: "I don't have much to leave behind, no fancy jewelry or big house. But I've got plenty of stories. I've always thought writing them down would be like making something special. With a little push, I did it. It's like a gift for my kids and grandkids, full of memories from my nursing days and quiet nights with my cats. I hope they'll keep it close one day. It shows who I was."        },        {            name: "Ruth Patterson",            age: 74,            text: "I've always imagined that writing my story would be like taking a long walk through my past. With some guidance, I took that walk. I laughed remembering how I wrecked my first car, and I got teary thinking about friends who've passed. It wasn't just about saving those moments. It was about feeling them again. I want my family to read it and see the real me, not just the old lady they know now. It's been a joy to do this."        },        {            name: "Samuel Davis",            age: 85,            text: "My life has had its share of highs and lows, from lost jobs to cross-country moves. I've long wanted to write about it to understand how those struggles shaped me. With some support, I accomplished that goal. I even wondered if it might help others too. My sons rarely seek my advice, but now they have my experiences in writing. It proves you can falter and still thrive. It's my way of guiding them beyond my years."        },        {            name: "George Wilson",            age: 83,            text: "I often pondered whether my life warranted a written record, just an average man laboring on the railroad and raising a family. Yet at 80, with encouragement, I chose to proceed. The process was revelatory, unearthing memories and illuminating my journey's scope. My daughter assisted with transcribing, and we shared laughter and tears along the way. It's imperfect but authentically mine. I take pride in its creation, and that suffices as justification."        },        {            name: "Arthur Hughes",            age: 87,            text: "At 87, I've lived a rich existence, replete with moments of beauty and others tempered by hardship. I've long believed that documenting my autobiography would serve as an expression of gratitude for it all. With thoughtful assistance, I brought this vision to life. It honors the loved ones I've held dear, the places I've inhabited, and the trials that fortified my spirit. While crafted for my family's legacy, it also fulfills a personal need to celebrate my life's entirety. That fulfillment is beyond measure."        }    ];    const testimonialCards = document.querySelectorAll('.testimonial-card');    let currentTestimonials = [];    let intervalId;    // Function to get 3 random unique testimonials    function getRandomTestimonials() {        const shuffled = testimonials.sort(() => 0.5 - Math.random());        return shuffled.slice(0, 3);    }    // Function to update testimonials with fade transition    function updateTestimonials() {        const newTestimonials = getRandomTestimonials();                testimonialCards.forEach((card, index) => {            // Add fade-out class            card.classList.add('fade-out');                        // After fade-out animation, update content and fade back in            setTimeout(() => {                const testimonial = newTestimonials[index];                                // Update content                const nameElement = card.querySelector('.testimonial-name');                const ageElement = card.querySelector('.testimonial-age');                const textElement = card.querySelector('.testimonial-text');                                if (nameElement) nameElement.textContent = testimonial.name;                if (ageElement) ageElement.textContent = `Age ${testimonial.age}`;                if (textElement) textElement.textContent = `"${testimonial.text}"`;                                // Remove fade-out and add fade-in                card.classList.remove('fade-out');                card.classList.add('fade-in');                                // Clean up fade-in class after animation                setTimeout(() => {                    card.classList.remove('fade-in');                }, 500);                            }, 250); // Half of the transition duration        });                currentTestimonials = newTestimonials;    }    // Initialize with first set of testimonials immediately    if (testimonialCards.length > 0) {        updateTestimonials();        console.log('✅ Hero testimonials initialized with first set');    } else {        console.error('❌ No testimonial cards found for hero section');    }        // Set up interval to change testimonials every minute (60000ms)    intervalId = setInterval(updateTestimonials, 60000);        // Store interval ID for potential cleanup    window.heroTestimonialsInterval = intervalId;}
+    // Ensure first card is active on load
+    if (cards.length > 0) {
+        cards[0].classList.add('active');
+    }
+}
 
 // Scroll-triggered animations with AOS
 function initScrollEffects() {
@@ -388,9 +322,7 @@ function showModal(type) {
     // Add form submit listener
     const form = modalContent.querySelector('#waitlistForm');
     if (form) {
-        console.log('Adding form submit listener');
         form.addEventListener('submit', (e) => {
-            console.log('Form submit event triggered');
             e.preventDefault();
             submitWaitlist();
         });
@@ -420,17 +352,14 @@ function showModal(type) {
 }
 
 function submitWaitlist() {
-    console.log('submitWaitlist called');
     const form = document.getElementById('waitlistForm');
     if (!form) {
         console.error('Form not found');
         return;
     }
-    console.log('Form found');
 
     const email = form.querySelector('input[type="email"]').value;
     const name = form.querySelector('input[type="text"]').value;
-    console.log('Form values:', { email, name });
     
     // Show loading state
     const submitButton = form.querySelector('button[type="submit"]');
@@ -439,9 +368,9 @@ function submitWaitlist() {
     submitButton.textContent = 'Submitting...';
 
     // Get the Cloud Function URL from the environment
-    const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5001/vitae-local/us-central1/handleWaitlistSubmission' : 'https://us-central1-vitae-460717.cloudfunctions.net/handleWaitlistSubmission';  // Production
-    
-    console.log('Sending request to:', functionUrl);
+    const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 
+        'http://127.0.0.1:5001/vitae-local/us-central1/handleWaitlistSubmission' : 
+        'https://us-central1-vitae-460717.cloudfunctions.net/handleWaitlistSubmission';
 
     // Submit the form
     fetch(functionUrl, {
@@ -451,12 +380,8 @@ function submitWaitlist() {
         },
         body: JSON.stringify({ email, name })
     })
-    .then(response => {
-        console.log('Response received:', response);
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
-        console.log('Data received:', data);
         if (data.error) {
             throw new Error(data.error);
         }
@@ -563,11 +488,6 @@ const styles = `
         flex-wrap: wrap;
     }
 
-    .animate-in {
-        opacity: 1 !important;
-        transform: translateY(0) !important;
-    }
-
     .fade-in-up {
         animation: fadeInUp 0.6s ease forwards;
     }
@@ -581,10 +501,6 @@ const styles = `
             opacity: 1;
             transform: translateY(0);
         }
-    }
-
-    .nav {
-        transition: transform 0.3s ease;
     }
 
     @media (max-width: 768px) {
@@ -605,343 +521,30 @@ const styles = `
 
 const styleSheet = document.createElement('style');
 styleSheet.textContent = styles;
-document.head.appendChild(styleSheet); 
+document.head.appendChild(styleSheet);
 
-// Hero Cards GlideJS Carousel
-function initHeroCarousel() {
-    // Check if Glide is available
-    if (typeof Glide === 'undefined') {
-        console.error('❌ Glide is not loaded! Make sure GlideJS script is included before this script.');
-        return;
-    }
-
-    const heroCarouselContainer = document.querySelector('.hero-cards-container.glide');
+// Initialize everything when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('🚀 Initializing Vitae application...');
     
-    if (!heroCarouselContainer) {
-        console.error('❌ Hero carousel container not found');
-        return;
-    }
-
-    // Debug: Check what we have
-    const slides = heroCarouselContainer.querySelectorAll('.glide__slide');
-    const cards = heroCarouselContainer.querySelectorAll('.story-card');
-    console.log('🔍 Debug - Found slides:', slides.length, 'cards:', cards.length);
-    console.log('🔍 Container dimensions:', heroCarouselContainer.offsetWidth, 'x', heroCarouselContainer.offsetHeight);
-
-    let glide = null;
-    let isMobile = window.innerWidth <= 768;
-    console.log('📱 Is mobile?', isMobile, 'Screen width:', window.innerWidth);
-
-    // Configure GlideJS options for mobile only
-    function getGlideConfig() {
-        return {
-            type: 'carousel',
-            startAt: 0,
-            perView: 1,
-            focusAt: 'center',
-            gap: 0,
-            autoplay: 3000,
-            hoverpause: true,
-            keyboard: true,
-            swipeThreshold: 80,
-            dragThreshold: 120,
-            animationDuration: 600,
-            animationTimingFunc: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)',
-            direction: 'ltr'
-        };
-    }
-
-    function initializeGlide() {
-        if (glide) {
-            glide.destroy();
-            glide = null;
-        }
-
-        console.log('🔧 Screen width:', window.innerWidth, 'isMobile:', isMobile);
-
-        // Skip carousel on mobile, just show cards in simple layout
-        if (isMobile) {
-            console.log('📱 Setting up simple mobile layout (no carousel)...');
-            setupMobileCards();
-        } else {
-            console.log('🖥️ Setting up desktop layout...');
-            // Desktop: Set first card as active for floating animation
-            setupDesktopCards();
-        }
-    }
-
-    function setupMobileCards() {
-        // For mobile, just add AOS animations without any styling changes
-        const slides = heroCarouselContainer.querySelectorAll('.glide__slide');
-        console.log('📱 Mobile setup - Found slides:', slides.length);
-        
-        slides.forEach((slide, index) => {
-            const card = slide.querySelector('.story-card');
-            if (card) {
-                // Only add AOS parallax attributes - no styling changes
-                if (index === 0) {
-                    card.setAttribute('data-aos', 'fade-right');
-                    card.setAttribute('data-aos-duration', '800');
-                    card.setAttribute('data-aos-delay', '0');
-                } else if (index === 1) {
-                    card.setAttribute('data-aos', 'fade-left');
-                    card.setAttribute('data-aos-duration', '800');
-                    card.setAttribute('data-aos-delay', '200');
-                } else if (index === 2) {
-                    card.setAttribute('data-aos', 'fade-right');
-                    card.setAttribute('data-aos-duration', '800');
-                    card.setAttribute('data-aos-delay', '400');
-                }
-                
-                console.log(`📱 Added AOS to mobile card ${index} with original styling`);
-            }
-        });
-        
-        // Initialize AOS after setting up cards
-        if (typeof AOS !== 'undefined') {
-            AOS.init({
-                duration: 800,
-                easing: 'ease-out-cubic',
-                once: true,
-                offset: 50,
-                disable: function() {
-                    // Disable AOS on desktop
-                    return window.innerWidth > 768;
-                }
-            });
-            console.log('📱 AOS initialized for mobile parallax');
-        }
-    }
-
-    function setupDesktopCards() {
-        // For desktop, we want to show all cards and activate the first one
-        const slides = heroCarouselContainer.querySelectorAll('.glide__slide');
-        const originalSlides = heroCarouselContainer.querySelectorAll('.glide__slide:not(.glide__slide--clone)');
-        
-        console.log('🖥️ Desktop setup - Total slides:', slides.length, 'Original slides:', originalSlides.length);
-        
-        // If no original slides found, use all slides (before GlideJS processes them)
-        const slidesToUse = originalSlides.length > 0 ? originalSlides : slides;
-        
-        slidesToUse.forEach((slide, index) => {
-            const card = slide.querySelector('.story-card');
-            if (card) {
-                card.classList.toggle('active', index === 0);
-                if (index === 0) {
-                    card.style.animation = 'float 4s ease-in-out infinite';
-                    console.log('✨ Desktop: Activated first card');
-                } else {
-                    card.style.animation = 'none';
-                }
-                // Ensure all cards are visible on desktop
-                card.style.opacity = '1';
-                card.style.transform = 'none';
-            }
-        });
-    }
-
-    function updateActiveStates() {
-        const allSlides = heroCarouselContainer.querySelectorAll('.glide__slide');
-        const originalSlides = heroCarouselContainer.querySelectorAll('.glide__slide:not(.glide__slide--clone)');
-        const bullets = heroCarouselContainer.querySelectorAll('.glide__bullet');
-        
-        // Find the currently active slide (including clones)
-        const activeSlide = heroCarouselContainer.querySelector('.glide__slide--active');
-        let activeIndex = -1;
-        
-        if (activeSlide) {
-            // Check if it's a clone or original slide
-            if (activeSlide.classList.contains('glide__slide--clone')) {
-                // It's a clone - we need to find which original it represents
-                const slideContent = activeSlide.innerHTML;
-                originalSlides.forEach((slide, index) => {
-                    if (slide.innerHTML === slideContent) {
-                        activeIndex = index;
-                    }
-                });
-            } else {
-                // It's an original slide - find its index among original slides
-                originalSlides.forEach((slide, index) => {
-                    if (slide === activeSlide) {
-                        activeIndex = index;
-                    }
-                });
-            }
-        }
-        
-        // If no active slide found, default to first slide
-        if (activeIndex === -1) {
-            activeIndex = 0;
-        }
-        
-        console.log('🎯 Setting active index:', activeIndex, 'out of', originalSlides.length, 'slides');
-        
-        // Update card active states for original slides only
-        originalSlides.forEach((slide, index) => {
-            const card = slide.querySelector('.story-card');
-            const isActive = index === activeIndex;
-            
-            if (card) {
-                card.classList.toggle('active', isActive);
-                
-                if (isActive) {
-                    // Add floating animation to active card
-                    card.style.animation = 'float 4s ease-in-out infinite';
-                    console.log('✨ Activated card', index);
-                } else {
-                    // Remove animation from inactive cards
-                    card.style.animation = 'none';
-                }
-            }
-        });
-
-        // Update bullet active states (custom styling)
-        bullets.forEach((bullet, index) => {
-            const isActive = bullet.classList.contains('glide__bullet--active');
-            if (isActive) {
-                bullet.style.transform = 'scale(1.2)';
-            } else {
-                bullet.style.transform = 'scale(1)';
-            }
-        });
-    }
-
-    // Handle responsive behavior
-    function handleResize() {
-        const newIsMobile = window.innerWidth <= 768;
-        
-        if (newIsMobile !== isMobile) {
-            isMobile = newIsMobile;
-            initializeGlide();
-        }
-    }
-
-    // Initial setup
-    initializeGlide();
-
-    // Handle window resize with debouncing
-    window.addEventListener('resize', debounce(handleResize, 250));
-
-    // Store glide instance for potential cleanup
-    window.heroGlide = glide;
-}
-
-// Debounce utility function
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Audio Controls functionality
-function initAudioControls() {
-    const storyCards = document.querySelectorAll('.story-card');
+    // Initialize core functionality
+    initNavigation();
+    initButtons();
+    initAnimations();
+    initScrollEffects();
     
-    storyCards.forEach((card, cardIndex) => {
-        const playBtn = card.querySelector('.play-btn');
-        const pauseBtn = card.querySelector('.pause-btn');
-        const waveform = card.querySelector('.waveform');
-        const waveBars = card.querySelectorAll('.wave-bar');
-        
-        let isPlaying = false;
-        let animationInterval;
-        
-        // Play button functionality
-        playBtn?.addEventListener('click', () => {
-            // Stop all other cards
-            stopAllOtherCards(cardIndex);
-            
-            isPlaying = true;
-            playBtn.style.display = 'none';
-            pauseBtn.style.display = 'flex';
-            playBtn.classList.add('playing');
-            
-            // Animate wave bars more intensely
-            startWaveAnimation();
-            
-            // Simulate audio progress (in real app, this would be tied to actual audio)
-            console.log(`Playing story: ${card.querySelector('.card-name').textContent}`);
+    // Initialize AOS (Animate On Scroll)
+    if (typeof AOS !== 'undefined') {
+        AOS.init({
+            duration: 600,
+            easing: 'ease-out-cubic',
+            once: true,
+            offset: 50
         });
-        
-        // Pause button functionality
-        pauseBtn?.addEventListener('click', () => {
-            isPlaying = false;
-            playBtn.style.display = 'flex';
-            pauseBtn.style.display = 'none';
-            playBtn.classList.remove('playing');
-            
-            stopWaveAnimation();
-            
-            console.log(`Paused story: ${card.querySelector('.card-name').textContent}`);
-        });
-        
-        // Next button has been removed from the design
-        
-        function startWaveAnimation() {
-            // Enhanced wave animation for playing state
-            waveBars.forEach((bar, index) => {
-                bar.style.animationDuration = `${0.8 + Math.random() * 0.4}s`;
-                bar.style.animationDelay = `${index * 0.05}s`;
-                bar.style.opacity = '1';
-            });
-            
-            // Add pulsing effect to waveform container
-            waveform.style.background = 'linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(139, 92, 246, 0.1))';
-            waveform.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.2)';
-        }
-        
-        function stopWaveAnimation() {
-            // Reset wave bars to default state
-            waveBars.forEach((bar, index) => {
-                bar.style.animationDuration = '1.5s';
-                bar.style.animationDelay = `${index * 0.1}s`;
-                bar.style.opacity = '0.7';
-            });
-            
-            // Reset waveform container
-            waveform.style.background = 'var(--surface)';
-            waveform.style.boxShadow = 'none';
-        }
-        
-        function stopCard() {
-            isPlaying = false;
-            playBtn.style.display = 'flex';
-            pauseBtn.style.display = 'none';
-            playBtn.classList.remove('playing');
-            stopWaveAnimation();
-        }
-        
-        function stopAllOtherCards(currentCardIndex) {
-            storyCards.forEach((otherCard, otherIndex) => {
-                if (otherIndex !== currentCardIndex) {
-                    const otherPlayBtn = otherCard.querySelector('.play-btn');
-                    const otherPauseBtn = otherCard.querySelector('.pause-btn');
-                    const otherWaveform = otherCard.querySelector('.waveform');
-                    const otherWaveBars = otherCard.querySelectorAll('.wave-bar');
-                    
-                    // Stop other card
-                    otherPlayBtn.style.display = 'flex';
-                    otherPauseBtn.style.display = 'none';
-                    otherPlayBtn.classList.remove('playing');
-                    
-                    // Reset other card's wave animation
-                    otherWaveBars.forEach((bar, index) => {
-                        bar.style.animationDuration = '1.5s';
-                        bar.style.animationDelay = `${index * 0.1}s`;
-                        bar.style.opacity = '0.7';
-                    });
-                    
-                    otherWaveform.style.background = 'var(--surface)';
-                    otherWaveform.style.boxShadow = 'none';
-                }
-            });
-        }
-    });
-}
-
+        console.log('✅ AOS initialized');
+    } else {
+        console.warn('⚠️ AOS library not found');
+    }
+    
+    console.log('✅ Vitae application initialized successfully');
+});
