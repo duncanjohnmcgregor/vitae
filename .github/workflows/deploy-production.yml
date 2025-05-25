@@ -12,32 +12,16 @@ on:
         type: choice
         options:
         - prod
-        - local
-      skip_terraform:
-        description: 'Skip Terraform deployment'
-        required: false
-        default: false
-        type: boolean
-      skip_firebase:
-        description: 'Skip Firebase deployment'
-        required: false
-        default: false
-        type: boolean
-      functions_only:
-        description: 'Deploy Functions only'
-        required: false
-        default: false
-        type: boolean
+        - staging
 
 env:
   NODE_VERSION: '18'
-  TERRAFORM_VERSION: '1.6.0'
 
 jobs:
   deploy:
     name: Deploy to Production
-    runs-on: windows-latest
-    timeout-minutes: 30
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
     
     steps:
     - name: Checkout code
@@ -52,11 +36,6 @@ jobs:
           package-lock.json
           functions/package-lock.json
 
-    - name: Setup Terraform
-      uses: hashicorp/setup-terraform@v3
-      with:
-        terraform_version: ${{ env.TERRAFORM_VERSION }}
-
     - name: Authenticate to Google Cloud
       id: auth
       uses: google-github-actions/auth@v2
@@ -65,131 +44,69 @@ jobs:
 
     - name: Install Root Dependencies
       run: |
-        if (Test-Path "package.json") {
-          Write-Host "Installing root dependencies (including Firebase CLI)..."
-          npm ci --prefer-offline --no-audit --no-fund --silent
-          Write-Host "✅ Root dependencies installed"
-        } else {
-          Write-Host "No root package.json found, skipping root dependencies"
-        }
-      shell: pwsh
+        echo "Installing root dependencies (including Firebase CLI)..."
+        npm ci --prefer-offline --no-audit --no-fund --silent
+        echo "✅ Root dependencies installed"
 
     - name: Install Functions Dependencies  
       run: |
-        if (Test-Path "functions/package.json") {
-          Write-Host "Installing functions dependencies..."
-          Set-Location functions
-          npm ci --prefer-offline --no-audit --no-fund --silent
-          Set-Location ..
-          Write-Host "✅ Functions dependencies installed"
-        } else {
-          Write-Host "No functions package.json found, skipping functions dependencies"
-        }
-      shell: pwsh
+        echo "Installing functions dependencies..."
+        cd functions
+        npm ci --prefer-offline --no-audit --no-fund --silent
+        cd ..
+        echo "✅ Functions dependencies installed"
 
-    - name: Configure Firebase Token
+    - name: Set Firebase Project
       run: |
-        # Use modern Firebase authentication via service account credentials
-        Write-Host "Setting up Firebase project configuration..."
+        echo "Setting Firebase project to ${{ secrets.GCP_PROJECT_ID }}..."
         npx firebase use ${{ secrets.GCP_PROJECT_ID }}
-      shell: pwsh
+        echo "✅ Firebase project configured"
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
-    - name: Verify Authentication
+    - name: Deploy Firebase Functions
       run: |
-        Write-Host "Verifying Firebase authentication..."
-        npx firebase projects:list
-        Write-Host "✅ Firebase authentication verified"
-        
-        Write-Host "Verifying Google Cloud credentials are available..."
-        if ($env:GOOGLE_APPLICATION_CREDENTIALS) {
-          Write-Host "✅ Google Cloud credentials file available at: $env:GOOGLE_APPLICATION_CREDENTIALS"
-        } else {
-          Write-Host "✅ Google Cloud credentials available via auth action"
-        }
-      shell: pwsh
+        echo "Deploying Firebase Functions..."
+        npx firebase deploy --only functions --project ${{ secrets.GCP_PROJECT_ID }}
+        echo "✅ Firebase Functions deployed"
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
-    - name: Deploy using PowerShell script
+    - name: Deploy Firestore Rules
+      run: |
+        echo "Deploying Firestore rules..."
+        npx firebase deploy --only firestore:rules --project ${{ secrets.GCP_PROJECT_ID }}
+        echo "✅ Firestore rules deployed"
       env:
-        FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
-      run: |
-        $deployParams = @{
-          Environment = if ("${{ github.event.inputs.environment }}" -ne "") { "${{ github.event.inputs.environment }}" } else { "prod" }
-          ProjectId = "${{ secrets.GCP_PROJECT_ID }}"
-          Region = "${{ vars.GCP_REGION || 'us-central1' }}"
-          SkipEmulatorCleanup = $true
-        }
-        
-        # Add conditional parameters based on inputs
-        if ("${{ github.event.inputs.skip_terraform }}" -eq "true") {
-          $deployParams.SkipTerraform = $true
-        }
-        
-        if ("${{ github.event.inputs.skip_firebase }}" -eq "true") {
-          $deployParams.SkipFirebase = $true
-        }
-        
-        if ("${{ github.event.inputs.functions_only }}" -eq "true") {
-          $deployParams.DeployFunctionsOnly = $true
-        }
-        
-        Write-Host "Deployment Parameters:"
-        $deployParams | Format-Table -AutoSize
-        
-        .\deploy.ps1 @deployParams
-      shell: pwsh
 
-    - name: Post-deployment verification
+    - name: Deploy Firebase Hosting
       run: |
-        Write-Host "Deployment completed. Verifying resources..."
-        
-        if ("${{ github.event.inputs.skip_firebase }}" -ne "true") {
-          Write-Host "Checking Firebase Hosting deployment..."
-          $hostingUrl = "https://${{ secrets.GCP_PROJECT_ID }}.web.app"
-          try {
-            $response = Invoke-WebRequest -Uri $hostingUrl -Method Head -TimeoutSec 30
-            Write-Host "✅ Firebase Hosting is accessible: $hostingUrl (Status: $($response.StatusCode))"
-          } catch {
-            Write-Warning "⚠️ Firebase Hosting check failed: $($_.Exception.Message)"
-          }
-          
-          Write-Host "Checking Firebase Functions deployment..."
-          $functionUrl = "https://${{ vars.GCP_REGION || 'us-central1' }}-${{ secrets.GCP_PROJECT_ID }}.cloudfunctions.net/handleWaitlistSubmission"
-          try {
-            $response = Invoke-WebRequest -Uri $functionUrl -Method Options -TimeoutSec 30
-            Write-Host "✅ Firebase Functions are accessible: $functionUrl"
-          } catch {
-            Write-Warning "⚠️ Firebase Functions check failed: $($_.Exception.Message)"
-          }
-        }
-        
-        Write-Host "🎉 Deployment verification completed!"
-      shell: pwsh
-      continue-on-error: true
+        echo "Deploying Firebase Hosting..."
+        npx firebase deploy --only hosting --project ${{ secrets.GCP_PROJECT_ID }}
+        echo "✅ Firebase Hosting deployed"
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
-    - name: Notify deployment status
-      if: always()
+    - name: Verify Deployment
       run: |
-        $status = if ("${{ job.status }}" -eq "success") { "✅ SUCCESS" } else { "❌ FAILED" }
-        $environment = if ("${{ github.event.inputs.environment }}" -ne "") { "${{ github.event.inputs.environment }}" } else { "prod" }
-        
-        Write-Host "=== DEPLOYMENT SUMMARY ==="
-        Write-Host "Status: $status"
-        Write-Host "Environment: $environment"
-        Write-Host "Project: ${{ secrets.GCP_PROJECT_ID }}"
-        Write-Host "Region: ${{ vars.GCP_REGION || 'us-central1' }}"
-        Write-Host "Commit: ${{ github.sha }}"
-        Write-Host "Triggered by: ${{ github.actor }}"
-        
-        if ("${{ job.status }}" -eq "success") {
-          Write-Host ""
-          Write-Host "🌐 Production URLs:"
-          Write-Host "   Website: https://${{ secrets.GCP_PROJECT_ID }}.web.app"
-          Write-Host "   Functions: https://${{ vars.GCP_REGION || 'us-central1' }}-${{ secrets.GCP_PROJECT_ID }}.cloudfunctions.net/handleWaitlistSubmission"
-          Write-Host "   Console: https://console.firebase.google.com/project/${{ secrets.GCP_PROJECT_ID }}"
-        }
-      shell: pwsh 
+        echo "🎉 Deployment completed successfully!"
+        echo ""
+        echo "🌐 Production URLs:"
+        echo "   Website: https://${{ secrets.GCP_PROJECT_ID }}.web.app"
+        echo "   Functions: https://us-central1-${{ secrets.GCP_PROJECT_ID }}.cloudfunctions.net/handleWaitlistSubmission"
+        echo "   Console: https://console.firebase.google.com/project/${{ secrets.GCP_PROJECT_ID }}"
+        echo ""
+        echo "Testing website accessibility..."
+        curl -f -s -o /dev/null https://${{ secrets.GCP_PROJECT_ID }}.web.app || echo "⚠️ Website not immediately accessible (may take a moment)"
+        echo "✅ Deployment verification completed"
+
+    - name: Notify Success
+      if: success()
+      run: |
+        echo "::notice title=Deployment Successful::🚀 Successfully deployed to production! Website: https://${{ secrets.GCP_PROJECT_ID }}.web.app"
+
+    - name: Notify Failure
+      if: failure()
+      run: |
+        echo "::error title=Deployment Failed::❌ Production deployment failed. Check the logs above for details." 
