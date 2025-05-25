@@ -53,7 +53,11 @@ function initButtons() {
             // Handle different button actions
             const buttonText = this.textContent.toLowerCase();
             
-            if (buttonText.includes('start your story') || buttonText.includes('get started')) {
+            // Skip modal for "Start your story" buttons that have href attributes (navigation links)
+            if (this.hasAttribute('href') && buttonText.includes('start your story')) {
+                // Let the natural navigation happen
+                return;
+            } else if (buttonText.includes('get started')) {
                 showModal('waitlist');
             } else if (buttonText.includes('watch demo')) {
                 showModal('demo');
@@ -435,7 +439,7 @@ function submitWaitlist() {
     submitButton.textContent = 'Submitting...';
 
     // Get the Cloud Function URL from the environment
-    const functionUrl = window.location.hostname === 'localhost' ? 'http://localhost:5001/vitae-local/us-central1/handleWaitlistSubmission' : 'https://us-central1-vitae-460717.cloudfunctions.net/handleWaitlistSubmission';  // Production
+    const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5001/vitae-local/us-central1/handleWaitlistSubmission' : 'https://us-central1-vitae-460717.cloudfunctions.net/handleWaitlistSubmission';  // Production
     
     console.log('Sending request to:', functionUrl);
 
@@ -940,8 +944,4 @@ function initAudioControls() {
         }
     });
 }
-
-
-
-
 

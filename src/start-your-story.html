@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -108,7 +108,7 @@
         }
 
         .benefits-list li::before {
-            content: "✓";
+            content: "âœ“";
             position: absolute;
             left: 0;
             color: var(--primary);
@@ -406,9 +406,9 @@
                 </a>
             </div>
             <div class="nav-menu">
-                <a href="how-it-works" class="nav-link">How it works</a>
-                <a href="pricing" class="nav-link">Pricing</a>
-                <a href="start-your-story" class="btn btn-primary">Start your story</a>
+                <a href="how-it-works.html" class="nav-link">How it works</a>
+                <a href="pricing.html" class="nav-link">Pricing</a>
+                <a href="start-your-story.html" class="btn btn-primary">Start your story</a>
             </div>
         </div>
     </nav>
@@ -551,8 +551,8 @@
                 <div class="footer-links">
                     <div class="footer-column">
                         <h4>Product</h4>
-                        <a href="how-it-works">How it works</a>
-                        <a href="pricing">Pricing</a>
+                        <a href="how-it-works.html">How it works</a>
+                        <a href="pricing.html">Pricing</a>
                     </div>
                     <div class="footer-column">
                         <h4>Company</h4>
@@ -600,9 +600,7 @@
             submitButton.textContent = 'Submitting...';
 
             // Get the Cloud Function URL based on environment
-            const functionUrl = window.location.hostname === 'localhost' 
-                ? 'http://localhost:5001/vitae-local/us-central1/handleStartStorySubmission' 
-                : 'https://us-central1-vitae-460717.cloudfunctions.net/handleStartStorySubmission';
+            const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' ? 'http://127.0.0.1:5001/vitae-local/us-central1/handleStartStorySubmission' : 'https://us-central1-vitae-460717.cloudfunctions.net/handleStartStorySubmission';
             
             console.log('Submitting form data:', data);
             console.log('Sending to:', functionUrl);
@@ -656,3 +654,4 @@
     </script>
 </body>
 </html> 
+
