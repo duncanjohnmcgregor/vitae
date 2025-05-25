@@ -63,12 +63,15 @@ function Test-Command {
 function Stop-FirebaseEmulators {
     Write-Status "Checking for existing Firebase emulator processes..."
     
+    # Detect the right firebase command to use
+    $localFirebaseCmd = if ($env:CI -eq 'true' -or $env:GITHUB_ACTIONS -eq 'true') { "npx firebase" } else { "firebase" }
+    
     try {
         # Stop Firebase emulators using the CLI (most reliable method)
-        $output = firebase emulators:exec --help 2>&1
+        $output = & $localFirebaseCmd emulators:exec --help 2>&1
         if ($LASTEXITCODE -eq 0) {
             Write-Status "Attempting to stop Firebase emulators gracefully..."
-            firebase emulators:exec "echo 'Stopping emulators...'" 2>$null
+            & $localFirebaseCmd emulators:exec "echo 'Stopping emulators...'" 2>$null
         }
     }
     catch {
@@ -175,14 +178,28 @@ function Update-FirebaseProjectConfig {
 }
 
 # Check for required tools
+$isCI = $env:CI -eq 'true' -or $env:GITHUB_ACTIONS -eq 'true'
+
 $requiredTools = @{
     'Node.js' = { Test-Command 'node' }
     'npm' = { Test-Command 'npm' }
-    'Firebase CLI' = { Test-Command 'firebase' }
+}
+
+# Firebase CLI check - in CI it's installed via npm, so check for npx availability
+if ($isCI) {
+    $requiredTools['Firebase CLI (npx)'] = { Test-Command 'npx' }
+} else {
+    $requiredTools['Firebase CLI'] = { Test-Command 'firebase' }
 }
 
 if ($Environment -eq 'prod') {
-    $requiredTools['Google Cloud SDK'] = { Test-Command 'gcloud' }
+    # In CI with service account auth, we don't need gcloud command
+    if ($isCI -and $env:GOOGLE_APPLICATION_CREDENTIALS) {
+        Write-Status "Running in CI with service account credentials - skipping gcloud requirement"
+    } else {
+        $requiredTools['Google Cloud SDK'] = { Test-Command 'gcloud' }
+    }
+    
     if (-not $SkipTerraform) {
         $requiredTools['Terraform'] = { Test-Command 'terraform' }
     }
@@ -201,6 +218,9 @@ if ($missingTools.Count -gt 0) {
     Write-Host "`nPlease install the missing tools and try again."
     exit 1
 }
+
+# Set Firebase command based on environment
+$firebaseCmd = if ($isCI) { "npx firebase" } else { "firebase" }
 
 # Function to run a command and handle errors
 function Invoke-Command {
@@ -244,10 +264,10 @@ function Deploy-FirebaseFunctions {
     
     Write-Status "Deploying Firebase Functions for environment: $Environment"
     if ($Environment -eq 'prod') {
-        Invoke-Command -Command "firebase use prod" -ErrorMessage "Failed to switch to production Firebase project"
-        Invoke-Command -Command "firebase deploy --only functions" -ErrorMessage "Failed to deploy Firebase Functions to production"
+        Invoke-Command -Command "$firebaseCmd use prod" -ErrorMessage "Failed to switch to production Firebase project"
+        Invoke-Command -Command "$firebaseCmd deploy --only functions" -ErrorMessage "Failed to deploy Firebase Functions to production"
     } else {
-        Invoke-Command -Command "firebase use default" -ErrorMessage "Failed to switch to default Firebase project"
+        Invoke-Command -Command "$firebaseCmd use default" -ErrorMessage "Failed to switch to default Firebase project"
         
         # Stop any existing emulator processes before starting new ones (unless skipped)
         if (-not $SkipEmulatorCleanup) {
@@ -259,7 +279,7 @@ function Deploy-FirebaseFunctions {
         Write-Status "Starting Firebase emulators in background..."
         
         # Start emulators in a new PowerShell window
-        $emulatorCommand = "Write-Host 'Firebase Emulators Starting...' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the emulators.' -ForegroundColor Yellow; firebase emulators:start"
+        $emulatorCommand = "Write-Host 'Firebase Emulators Starting...' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the emulators.' -ForegroundColor Yellow; $firebaseCmd emulators:start"
         Start-Process powershell -ArgumentList "-NoExit", "-Command", $emulatorCommand -WindowStyle Normal
         
         # Wait a moment for emulators to start
@@ -275,8 +295,8 @@ function Deploy-FirebaseHosting {
     
     Write-Status "Deploying Firebase Hosting for environment: $Environment"
     if ($Environment -eq 'prod') {
-        Invoke-Command -Command "firebase use prod" -ErrorMessage "Failed to switch to production Firebase project"
-        Invoke-Command -Command "firebase deploy --only hosting" -ErrorMessage "Failed to deploy Firebase Hosting to production"
+        Invoke-Command -Command "$firebaseCmd use prod" -ErrorMessage "Failed to switch to production Firebase project"
+        Invoke-Command -Command "$firebaseCmd deploy --only hosting" -ErrorMessage "Failed to deploy Firebase Hosting to production"
     } else {
         Write-Status "Firebase Hosting will be served via emulators for local development"
     }
@@ -288,8 +308,8 @@ function Deploy-FirestoreRules {
     
     Write-Status "Deploying Firestore rules for environment: $Environment"
     if ($Environment -eq 'prod') {
-        Invoke-Command -Command "firebase use prod" -ErrorMessage "Failed to switch to production Firebase project"
-        Invoke-Command -Command "firebase deploy --only firestore" -ErrorMessage "Failed to deploy Firestore rules to production"
+        Invoke-Command -Command "$firebaseCmd use prod" -ErrorMessage "Failed to switch to production Firebase project"
+        Invoke-Command -Command "$firebaseCmd deploy --only firestore" -ErrorMessage "Failed to deploy Firestore rules to production"
     } else {
         Write-Status "Firestore rules will be used via emulators for local development"
     }
@@ -406,15 +426,21 @@ if ($Environment -eq 'prod') {
     
     # Authenticate with Google Cloud
     Write-Status "Ensuring Google Cloud authentication..."
-    try {
-        $currentProject = gcloud config get-value project 2>$null
-        if ($currentProject -ne $ProjectId) {
-            Invoke-Command -Command "gcloud config set project $ProjectId" -ErrorMessage "Failed to set Google Cloud project"
+    
+    if ($isCI -and $env:GOOGLE_APPLICATION_CREDENTIALS) {
+        Write-Status "Running in CI with service account credentials - skipping gcloud authentication"
+        Write-Status "Using service account credentials from: $env:GOOGLE_APPLICATION_CREDENTIALS"
+    } else {
+        try {
+            $currentProject = gcloud config get-value project 2>$null
+            if ($currentProject -ne $ProjectId) {
+                Invoke-Command -Command "gcloud config set project $ProjectId" -ErrorMessage "Failed to set Google Cloud project"
+            }
+            Invoke-Command -Command "gcloud auth application-default login" -ErrorMessage "Failed to authenticate with Google Cloud"
         }
-        Invoke-Command -Command "gcloud auth application-default login" -ErrorMessage "Failed to authenticate with Google Cloud"
-    }
-    catch {
-        Write-Warning "Google Cloud authentication may be required. Please run 'gcloud auth login' manually if needed."
+        catch {
+            Write-Warning "Google Cloud authentication may be required. Please run 'gcloud auth login' manually if needed."
+        }
     }
     
     # Deploy components based on flags
