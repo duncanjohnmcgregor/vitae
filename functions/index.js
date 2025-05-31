@@ -350,7 +350,8 @@ exports.setAdminClaim = onRequest((req, res) => {
     
     // Get admin secret from environment config
     const functions = require("firebase-functions");
-    const ADMIN_SECRET = functions.config().admin?.secret || process.env.ADMIN_SECRET || "vitae-admin-secret-2024";
+    const config = functions.config();
+    const ADMIN_SECRET = (config.admin && config.admin.secret) || process.env.ADMIN_SECRET || "vitae-admin-secret-2024";
     
     if (secretKey !== ADMIN_SECRET) {
       res.status(401).json({error: "Invalid secret key"});
