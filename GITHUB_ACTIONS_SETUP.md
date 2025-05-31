@@ -119,4 +119,6 @@ node setup-admin-user.js
 2. **Rotate secrets periodically** - Update both GitHub secrets and redeploy
 3. **Limit repository access** - Only trusted team members should have access
 4. **Monitor deployments** - Review deployment summaries for security warnings
-5. **Audit admin users** - Regularly review who has admin access 
+5. **Audit admin users** - Regularly review who has admin access
+6. **Principle of Least Privilege for Service Accounts**: Ensure the `GCP_SA_KEY` (and any other service account keys) corresponds to a service account with only the minimum necessary permissions required for its tasks (e.g., Firebase deployment).
+7. **Enable Repository Secret Scanning**: Configure and enable GitHub's secret scanning feature for your repository to help detect accidentally committed secrets.
