@@ -137,7 +137,11 @@ exports.handleStartStorySubmission = onRequest((req, res) => {
 
 // Admin Panel Functions
 
-// Helper function to verify admin access
+/**
+ * Helper function to verify admin access
+ * @param {Object} req - The request object
+ * @return {Object} Object with either error or user details
+ */
 async function verifyAdminToken(req) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith("Bearer ")) {
@@ -145,15 +149,15 @@ async function verifyAdminToken(req) {
   }
 
   const token = authHeader.split("Bearer ")[1];
-  
+
   try {
     const decodedToken = await admin.auth().verifyIdToken(token);
-    
+
     // Check if user has admin claim
     if (!decodedToken.admin) {
       return {error: "User is not authorized as admin"};
     }
-    
+
     return {uid: decodedToken.uid, email: decodedToken.email};
   } catch (error) {
     console.error("Error verifying token:", error);
@@ -347,12 +351,13 @@ exports.setAdminClaim = onRequest((req, res) => {
 
     // This function should be protected - for now it checks for a secret key
     const {email, secretKey} = req.body;
-    
+
     // Get admin secret from environment config
     const functions = require("firebase-functions");
     const config = functions.config();
-    const ADMIN_SECRET = (config.admin && config.admin.secret) || process.env.ADMIN_SECRET || "vitae-admin-secret-2024";
-    
+    const ADMIN_SECRET = (config.admin && config.admin.secret) ||
+      process.env.ADMIN_SECRET || "vitae-admin-secret-2024";
+
     if (secretKey !== ADMIN_SECRET) {
       res.status(401).json({error: "Invalid secret key"});
       return;
@@ -361,14 +366,14 @@ exports.setAdminClaim = onRequest((req, res) => {
     try {
       // Get user by email
       const user = await admin.auth().getUserByEmail(email);
-      
+
       // Set custom user claims
       await admin.auth().setCustomUserClaims(user.uid, {
         admin: true,
       });
-      
+
       console.log(`Admin claim set for user: ${email}`);
-      
+
       res.status(200).json({
         success: true,
         message: `Admin access granted to ${email}`,
