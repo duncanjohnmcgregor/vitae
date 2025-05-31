@@ -137,10 +137,41 @@ exports.handleStartStorySubmission = onRequest((req, res) => {
 
 // Admin Panel Functions
 
+// Helper function to verify admin access
+async function verifyAdminToken(req) {
+  const authHeader = req.headers.authorization;
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    return {error: "No authorization token provided"};
+  }
+
+  const token = authHeader.split("Bearer ")[1];
+  
+  try {
+    const decodedToken = await admin.auth().verifyIdToken(token);
+    
+    // Check if user has admin claim
+    if (!decodedToken.admin) {
+      return {error: "User is not authorized as admin"};
+    }
+    
+    return {uid: decodedToken.uid, email: decodedToken.email};
+  } catch (error) {
+    console.error("Error verifying token:", error);
+    return {error: "Invalid authorization token"};
+  }
+}
+
 exports.createCustomerStory = onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== "POST") {
       res.status(405).json({error: "Method Not Allowed"});
+      return;
+    }
+
+    // Verify admin access
+    const authResult = await verifyAdminToken(req);
+    if (authResult.error) {
+      res.status(401).json({error: authResult.error});
       return;
     }
 
@@ -176,6 +207,8 @@ exports.createCustomerStory = onRequest((req, res) => {
         questions: questions || [],
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
+        createdBy: authResult.email,
+        createdByUid: authResult.uid,
         status: "in-progress",
       };
 
@@ -199,6 +232,13 @@ exports.updateStoryAnswers = onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== "POST") {
       res.status(405).json({error: "Method Not Allowed"});
+      return;
+    }
+
+    // Verify admin access
+    const authResult = await verifyAdminToken(req);
+    if (authResult.error) {
+      res.status(401).json({error: authResult.error});
       return;
     }
 
@@ -234,6 +274,8 @@ exports.updateStoryAnswers = onRequest((req, res) => {
       await storyRef.update({
         questions: answers,
         updatedAt: new Date().toISOString(),
+        updatedBy: authResult.email,
+        updatedByUid: authResult.uid,
         status: "completed",
       });
 
@@ -254,6 +296,13 @@ exports.getCustomerStories = onRequest((req, res) => {
   cors(req, res, async () => {
     if (req.method !== "GET") {
       res.status(405).json({error: "Method Not Allowed"});
+      return;
+    }
+
+    // Verify admin access
+    const authResult = await verifyAdminToken(req);
+    if (authResult.error) {
+      res.status(401).json({error: authResult.error});
       return;
     }
 
@@ -284,6 +333,49 @@ exports.getCustomerStories = onRequest((req, res) => {
     } catch (error) {
       console.error("Error fetching customer stories:", error);
       res.status(500).json({error: "Internal Server Error"});
+    }
+  });
+});
+
+// Function to set admin claims on a user (call this separately to grant admin access)
+exports.setAdminClaim = onRequest((req, res) => {
+  cors(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).json({error: "Method Not Allowed"});
+      return;
+    }
+
+    // This function should be protected - for now it checks for a secret key
+    const {email, secretKey} = req.body;
+    
+    // Get admin secret from environment config
+    const functions = require("firebase-functions");
+    const ADMIN_SECRET = functions.config().admin?.secret || process.env.ADMIN_SECRET || "vitae-admin-secret-2024";
+    
+    if (secretKey !== ADMIN_SECRET) {
+      res.status(401).json({error: "Invalid secret key"});
+      return;
+    }
+
+    try {
+      // Get user by email
+      const user = await admin.auth().getUserByEmail(email);
+      
+      // Set custom user claims
+      await admin.auth().setCustomUserClaims(user.uid, {
+        admin: true,
+      });
+      
+      console.log(`Admin claim set for user: ${email}`);
+      
+      res.status(200).json({
+        success: true,
+        message: `Admin access granted to ${email}`,
+        uid: user.uid,
+      });
+    } catch (error) {
+      console.error("Error setting admin claim:", error);
+      res.status(500).json({error: error.message});
     }
   });
 });

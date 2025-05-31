@@ -1,14 +1,29 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
+    // Waitlist collection - public write for email submissions, no read access
     match /waitlist/{document=**} {
-      allow read, write: if true;  // Allow all operations for local development
+      allow read: if false;  // No public read access
+      allow create: if true; // Allow public to join waitlist
+      allow update, delete: if false; // No public update/delete
     }
+    
+    // Start story submissions - public write for form submissions, no read access
     match /start-story-submissions/{document=**} {
-      allow read, write: if true;  // Allow all operations for local development
+      allow read: if false;  // No public read access
+      allow create: if true; // Allow public to submit forms
+      allow update, delete: if false; // No public update/delete
     }
+    
+    // Customer stories - requires authentication
     match /customer-stories/{document=**} {
-      allow read, write: if true;  // Allow all operations for local development
+      // DEVELOPMENT ONLY - Replace with proper rules before production
+      // TODO: Uncomment the production rules below and remove the development rule
+      allow read, write: if true;  // ⚠️ DEVELOPMENT ONLY - INSECURE
+      
+      // PRODUCTION RULES (uncomment these and remove the rule above):
+      // allow read: if request.auth != null && request.auth.token.admin == true;
+      // allow write: if request.auth != null && request.auth.token.admin == true;
     }
   }
 }
