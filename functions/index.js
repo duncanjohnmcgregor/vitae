@@ -222,7 +222,7 @@ exports.updateStoryAnswers = onRequest((req, res) => {
       // Update Firestore document
       const db = admin.firestore();
       const storyRef = db.collection("customer-stories").doc(storyId);
-      
+
       // Check if story exists
       const storyDoc = await storyRef.get();
       if (!storyDoc.exists) {
