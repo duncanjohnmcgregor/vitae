@@ -52,9 +52,23 @@ jobs:
               echo "⚠️ src/$file missing"
             fi
           done
+          
+          # Check admin panel files
+          if [[ -f "src/admin.html" ]]; then
+            echo "✅ src/admin.html found"
+          else
+            echo "⚠️ src/admin.html missing (admin panel not configured)"
+          fi
         else
           echo "❌ src directory not found!"
           exit 1
+        fi
+        
+        # Check for production firestore rules
+        if [[ -f "firestore.rules.production" ]]; then
+          echo "✅ firestore.rules.production found"
+        else
+          echo "⚠️ firestore.rules.production missing (needed for secure deployment)"
         fi
 
     - name: Validate JSON configurations
@@ -82,6 +96,13 @@ jobs:
             echo "✅ Firestore configuration found"
           else
             echo "⚠️ No firestore configuration in firebase.json"
+          fi
+          
+          # Check for admin route configuration
+          if jq -e '.hosting.rewrites[] | select(.source == "/admin")' firebase.json >/dev/null; then
+            echo "✅ Admin route configuration found"
+          else
+            echo "⚠️ No admin route configured in firebase.json"
           fi
         else
           echo "❌ firebase.json is invalid JSON"
@@ -132,6 +153,51 @@ jobs:
         
         if [[ "$found_issues" == "false" ]]; then
           echo "✅ No obvious secrets found"
+        fi
+
+    - name: Check Firestore rules security
+      run: |
+        echo "🔍 Checking Firestore rules security..."
+        
+        # Check if using insecure development rules
+        if grep -q "allow read, write: if true" firestore.rules; then
+          echo "⚠️ WARNING: firestore.rules contains insecure development rules!"
+          echo "  Development rules should not be used in production"
+          
+          # Check if production rules exist
+          if [[ -f "firestore.rules.production" ]]; then
+            echo "✅ Production rules file exists (firestore.rules.production)"
+            echo "  Ensure deployment uses production rules"
+          else
+            echo "❌ No production rules file found!"
+            echo "  Create firestore.rules.production with secure rules"
+          fi
+        else
+          echo "✅ firestore.rules doesn't contain obvious insecure patterns"
+        fi
+
+    - name: Check admin authentication
+      run: |
+        echo "🔍 Checking admin authentication configuration..."
+        
+        # Check admin.html for hardcoded credentials
+        if [[ -f "src/admin.html" ]]; then
+          if grep -q "password.*=.*['\"]admin['\"]" src/admin.html || \
+             grep -q "password.*=.*['\"]password['\"]" src/admin.html || \
+             grep -q "credentials.*hardcoded" src/admin.html; then
+            echo "❌ Found potential hardcoded credentials in admin.html!"
+            echo "  Use Firebase Authentication instead"
+            exit 1
+          else
+            echo "✅ No obvious hardcoded credentials in admin.html"
+          fi
+          
+          # Check for Firebase Auth usage
+          if grep -q "firebase.auth()" src/admin.html; then
+            echo "✅ Admin panel appears to use Firebase Authentication"
+          else
+            echo "⚠️ Admin panel might not be using Firebase Authentication"
+          fi
         fi
 
     - name: Check for vulnerable dependencies
@@ -270,6 +336,35 @@ jobs:
           done
         else
           echo "⚠️ No JavaScript files found in src directory"
+        fi
+
+    - name: Lint admin panel
+      run: |
+        echo "🔍 Linting admin panel..."
+        
+        if [[ -f "src/admin.html" ]]; then
+          echo "Checking admin.html..."
+          
+          # Check for inline scripts
+          if grep -q "<script[^>]*>[^<]" src/admin.html; then
+            echo "✅ Admin panel contains inline scripts (expected for authentication)"
+          fi
+          
+          # Check for Firebase imports
+          if grep -q "firebase-app.js" src/admin.html && grep -q "firebase-auth.js" src/admin.html; then
+            echo "✅ Admin panel imports Firebase libraries"
+          else
+            echo "⚠️ Admin panel missing Firebase library imports"
+          fi
+          
+          # Check for security headers
+          if grep -q "Content-Security-Policy" src/admin.html; then
+            echo "✅ Admin panel has CSP headers"
+          else
+            echo "⚠️ Consider adding Content-Security-Policy headers"
+          fi
+        else
+          echo "⚠️ No admin panel found (src/admin.html)"
         fi
 
   test-backend:
