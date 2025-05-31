@@ -179,7 +179,7 @@
         }
 
         .hidden {
-            display: none;
+            display: none !important;
         }
 
         .success-message {
@@ -253,6 +253,9 @@
         <div class="auth-loading-content">
             <div class="spinner"></div>
             <p>Checking authentication...</p>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: var(--text-secondary);">
+                Taking too long? <a href="#" onclick="document.getElementById('authLoading').style.display='none'; return false;" style="color: var(--primary);">Click here to continue</a>
+            </p>
         </div>
     </div>
 
@@ -347,7 +350,8 @@
             getAuth, 
             signInWithEmailAndPassword,
             onAuthStateChanged,
-            signOut
+            signOut,
+            connectAuthEmulator
         } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
 
         // Firebase configuration
@@ -364,8 +368,30 @@
         const app = initializeApp(firebaseConfig);
         const auth = getAuth(app);
 
+        // Connect to emulators if running locally
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            try {
+                connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+                console.log('Connected to Auth emulator');
+            } catch (error) {
+                // Already connected, ignore
+                console.log('Auth emulator already connected or error:', error.message);
+            }
+        }
+
         // Make auth available globally
         window.firebaseAuth = auth;
+
+        // Timeout failsafe - if auth doesn't respond in 5 seconds, show login
+        setTimeout(() => {
+            const loadingElement = document.getElementById('authLoading');
+            if (loadingElement && !loadingElement.classList.contains('hidden')) {
+                console.error('Auth initialization timeout - showing login form');
+                loadingElement.classList.add('hidden');
+                loadingElement.style.display = 'none';
+                showLoginForm();
+            }
+        }, 5000);
 
         // Placeholder questions
         const PLACEHOLDER_QUESTIONS = [
@@ -382,22 +408,32 @@
 
         // Auth state observer
         onAuthStateChanged(auth, async (user) => {
-            document.getElementById('authLoading').classList.add('hidden');
+            console.log('Auth state changed, user:', user ? user.email : 'null');
+            const authLoading = document.getElementById('authLoading');
+            if (authLoading) {
+                authLoading.classList.add('hidden');
+                authLoading.style.display = 'none';
+                console.log('Auth loading hidden in auth state observer');
+            }
             
             if (user) {
                 currentUser = user;
+                console.log('User authenticated:', user.email);
                 
                 // Get the ID token
                 try {
                     userToken = await user.getIdToken();
                     const idTokenResult = await user.getIdTokenResult();
+                    console.log('Token retrieved, checking admin claim...');
                     
                     // Check if user has admin claim
                     if (idTokenResult.claims.admin) {
+                        console.log('User has admin claim, showing admin panel');
                         showAdminPanel();
                         document.getElementById('userEmail').textContent = user.email;
                     } else {
                         // User is not an admin
+                        console.log('User does not have admin claim');
                         showMessage('Access denied. You are not authorized to access the admin panel.', 'error');
                         await signOut(auth);
                         showLoginForm();
@@ -407,18 +443,41 @@
                     showLoginForm();
                 }
             } else {
+                console.log('No user authenticated, showing login form');
                 showLoginForm();
             }
+        }, (error) => {
+            console.error('Auth state observer error:', error);
+            const authLoading = document.getElementById('authLoading');
+            if (authLoading) {
+                authLoading.classList.add('hidden');
+                authLoading.style.display = 'none';
+            }
+            showLoginForm();
         });
 
         function showLoginForm() {
+            console.log('showLoginForm called');
             document.getElementById('loginSection').classList.remove('hidden');
             document.getElementById('adminPanel').classList.add('hidden');
+            const authLoading = document.getElementById('authLoading');
+            if (authLoading) {
+                authLoading.classList.add('hidden');
+                authLoading.style.display = 'none';
+                console.log('Auth loading hidden via showLoginForm');
+            }
         }
 
         function showAdminPanel() {
+            console.log('showAdminPanel called');
             document.getElementById('loginSection').classList.add('hidden');
             document.getElementById('adminPanel').classList.remove('hidden');
+            const authLoading = document.getElementById('authLoading');
+            if (authLoading) {
+                authLoading.classList.add('hidden');
+                authLoading.style.display = 'none';
+                console.log('Auth loading hidden via showAdminPanel');
+            }
         }
 
         // Login form handler
@@ -639,4 +698,4 @@
         };
     </script>
 </body>
-</html> 
+</html>
