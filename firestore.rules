@@ -7,5 +7,8 @@ service cloud.firestore {
     match /start-story-submissions/{document=**} {
       allow read, write: if true;  // Allow all operations for local development
     }
+    match /customer-stories/{document=**} {
+      allow read, write: if true;  // Allow all operations for local development
+    }
   }
 }

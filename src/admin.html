@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitae Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Admin-specific styles */
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-primary);
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .admin-header h1 {
+            color: var(--text-primary);
+            font-size: 2rem;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: var(--error);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .admin-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .action-card {
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .action-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .action-card p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .stories-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .story-item {
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .story-item:hover {
+            background: var(--surface);
+        }
+
+        .story-info h4 {
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .story-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .story-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .story-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .story-modal-content {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .question-form {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--surface);
+            border-radius: 10px;
+        }
+
+        .question-form h3 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .question-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .question-item h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .success-message {
+            padding: 15px;
+            background: #4ade80;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .error-message {
+            padding: 15px;
+            background: var(--error);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Form -->
+    <div id="loginSection" class="admin-container">
+        <form id="loginForm" class="login-form">
+            <h2>Admin Login</h2>
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Login</button>
+        </form>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-container hidden">
+        <div class="admin-header">
+            <h1>Vitae Admin Panel</h1>
+            <button class="logout-btn" onclick="logout()">Logout</button>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <div class="admin-actions">
+            <div class="action-card">
+                <h3>📝 New Customer Story</h3>
+                <p>Start a new customer story collection process</p>
+                <button class="btn btn-primary" onclick="startNewStory()">Start New Story</button>
+            </div>
+            <div class="action-card">
+                <h3>📊 View Stories</h3>
+                <p>View and manage existing customer stories</p>
+                <button class="btn btn-secondary" onclick="viewStories()">View All Stories</button>
+            </div>
+        </div>
+
+        <div id="storiesList" class="stories-list hidden">
+            <h2>Customer Stories</h2>
+            <div id="storiesContainer"></div>
+        </div>
+    </div>
+
+    <!-- Story Modal -->
+    <div id="storyModal" class="story-modal">
+        <div class="story-modal-content">
+            <h2 id="storyTitle">New Customer Story</h2>
+            <button class="btn btn-secondary" style="float: right;" onclick="closeStoryModal()">Close</button>
+            <div style="clear: both;"></div>
+
+            <div id="storyForm" class="question-form">
+                <h3>Customer Information</h3>
+                <div class="form-group">
+                    <label for="customerName">Customer Name</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerEmail">Customer Email</label>
+                    <input type="email" id="customerEmail" required>
+                </div>
+                <button class="btn btn-primary" onclick="createStory()">Create Story</button>
+            </div>
+
+            <div id="questionsSection" class="hidden">
+                <h3>Story Questions</h3>
+                <div id="questionsContainer"></div>
+                <button class="btn btn-primary" onclick="addQuestion()">Add Question</button>
+                <button class="btn btn-secondary" onclick="saveStory()">Save All Answers</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Default credentials (in production, use proper authentication)
+        const DEFAULT_USERNAME = 'admin';
+        const DEFAULT_PASSWORD = 'vitae2024';
+
+        // Placeholder questions
+        const PLACEHOLDER_QUESTIONS = [
+            "What is your earliest childhood memory?",
+            "Who was the most influential person in your life?",
+            "What was your greatest achievement?",
+            "What advice would you give to your younger self?",
+            "What tradition or value do you hope to pass on to future generations?"
+        ];
+
+        let currentStoryId = null;
+        let currentQuestionIndex = 0;
+
+        // Check if already logged in
+        if (localStorage.getItem('adminLoggedIn') === 'true') {
+            showAdminPanel();
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+
+            if (username === DEFAULT_USERNAME && password === DEFAULT_PASSWORD) {
+                localStorage.setItem('adminLoggedIn', 'true');
+                showAdminPanel();
+            } else {
+                showMessage('Invalid credentials', 'error');
+            }
+        });
+
+        function showAdminPanel() {
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+        }
+
+        function logout() {
+            localStorage.removeItem('adminLoggedIn');
+            location.reload();
+        }
+
+        function showMessage(message, type = 'success') {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div class="${type}-message">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        }
+
+        function startNewStory() {
+            document.getElementById('storyModal').style.display = 'block';
+            document.getElementById('storyForm').classList.remove('hidden');
+            document.getElementById('questionsSection').classList.add('hidden');
+            document.getElementById('storyTitle').textContent = 'New Customer Story';
+            currentStoryId = null;
+        }
+
+        function closeStoryModal() {
+            document.getElementById('storyModal').style.display = 'none';
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerEmail').value = '';
+        }
+
+        async function createStory() {
+            const name = document.getElementById('customerName').value;
+            const email = document.getElementById('customerEmail').value;
+
+            if (!name || !email) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? 'http://127.0.0.1:5001/vitae-local/us-central1/createCustomerStory' 
+                    : 'https://us-central1-vitae-460717.cloudfunctions.net/createCustomerStory';
+
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        questions: PLACEHOLDER_QUESTIONS.map((q, index) => ({
+                            id: `q${index + 1}`,
+                            question: q,
+                            answer: ''
+                        }))
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                currentStoryId = data.storyId;
+                showMessage('Story created successfully!');
+                document.getElementById('storyForm').classList.add('hidden');
+                document.getElementById('questionsSection').classList.remove('hidden');
+                displayQuestions();
+            } catch (error) {
+                console.error('Error creating story:', error);
+                showMessage('Error creating story: ' + error.message, 'error');
+            }
+        }
+
+        function displayQuestions() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            PLACEHOLDER_QUESTIONS.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-item';
+                questionDiv.innerHTML = `
+                    <h4>Question ${index + 1}</h4>
+                    <p>${question}</p>
+                    <textarea class="answer-input" id="answer-${index}" placeholder="Enter customer's answer here..."></textarea>
+                `;
+                container.appendChild(questionDiv);
+            });
+        }
+
+        function addQuestion() {
+            const newQuestion = prompt('Enter a new question:');
+            if (newQuestion) {
+                PLACEHOLDER_QUESTIONS.push(newQuestion);
+                displayQuestions();
+            }
+        }
+
+        async function saveStory() {
+            const answers = [];
+            PLACEHOLDER_QUESTIONS.forEach((question, index) => {
+                const answer = document.getElementById(`answer-${index}`).value;
+                answers.push({
+                    id: `q${index + 1}`,
+                    question: question,
+                    answer: answer
+                });
+            });
+
+            try {
+                const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? 'http://127.0.0.1:5001/vitae-local/us-central1/updateStoryAnswers' 
+                    : 'https://us-central1-vitae-460717.cloudfunctions.net/updateStoryAnswers';
+
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        storyId: currentStoryId,
+                        answers
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                showMessage('Story saved successfully!');
+                closeStoryModal();
+                viewStories();
+            } catch (error) {
+                console.error('Error saving story:', error);
+                showMessage('Error saving story: ' + error.message, 'error');
+            }
+        }
+
+        async function viewStories() {
+            document.getElementById('storiesList').classList.remove('hidden');
+            const container = document.getElementById('storiesContainer');
+            container.innerHTML = '<p>Loading stories...</p>';
+
+            try {
+                const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? 'http://127.0.0.1:5001/vitae-local/us-central1/getCustomerStories' 
+                    : 'https://us-central1-vitae-460717.cloudfunctions.net/getCustomerStories';
+
+                const response = await fetch(functionUrl);
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                if (data.stories && data.stories.length > 0) {
+                    container.innerHTML = '';
+                    data.stories.forEach(story => {
+                        const storyDiv = document.createElement('div');
+                        storyDiv.className = 'story-item';
+                        storyDiv.innerHTML = `
+                            <div class="story-info">
+                                <h4>${story.name}</h4>
+                                <p>${story.email} • Created: ${new Date(story.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div class="story-actions">
+                                <button class="btn btn-secondary" onclick="viewStoryDetails('${story.id}')">View Details</button>
+                            </div>
+                        `;
+                        container.appendChild(storyDiv);
+                    });
+                } else {
+                    container.innerHTML = '<p>No stories found. Create your first story!</p>';
+                }
+            } catch (error) {
+                console.error('Error loading stories:', error);
+                container.innerHTML = '<p>Error loading stories. Please try again.</p>';
+            }
+        }
+
+        async function viewStoryDetails(storyId) {
+            // Implementation for viewing story details
+            alert('Story details view coming soon!');
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('storyModal');
+            if (event.target === modal) {
+                closeStoryModal();
+            }
+        }
+    </script>
+</body>
+</html> 

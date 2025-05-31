@@ -134,3 +134,156 @@ exports.handleStartStorySubmission = onRequest((req, res) => {
 });
 
 // ESLint formatting fix
+
+// Admin Panel Functions
+
+exports.createCustomerStory = onRequest((req, res) => {
+  cors(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).json({error: "Method Not Allowed"});
+      return;
+    }
+
+    try {
+      // Check for malformed JSON or missing body
+      if (!req.body || typeof req.body !== "object") {
+        res.status(400).json({error: "Invalid request body"});
+        return;
+      }
+
+      const {name, email, questions} = req.body;
+
+      // Validate required fields
+      if (!name || !email) {
+        res.status(400).json({error: "Name and email are required"});
+        return;
+      }
+
+      // Basic email validation
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        res.status(400).json({error: "Invalid email address"});
+        return;
+      }
+
+      console.log("Creating customer story for:", {name, email});
+
+      // Save to Firestore
+      const db = admin.firestore();
+      const storyData = {
+        name,
+        email,
+        questions: questions || [],
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: "in-progress",
+      };
+
+      const docRef = await db.collection("customer-stories").add(storyData);
+
+      console.log("Customer story created with ID:", docRef.id);
+
+      res.status(200).json({
+        success: true,
+        message: "Customer story created successfully",
+        storyId: docRef.id,
+      });
+    } catch (error) {
+      console.error("Error creating customer story:", error);
+      res.status(500).json({error: "Internal Server Error"});
+    }
+  });
+});
+
+exports.updateStoryAnswers = onRequest((req, res) => {
+  cors(req, res, async () => {
+    if (req.method !== "POST") {
+      res.status(405).json({error: "Method Not Allowed"});
+      return;
+    }
+
+    try {
+      // Check for malformed JSON or missing body
+      if (!req.body || typeof req.body !== "object") {
+        res.status(400).json({error: "Invalid request body"});
+        return;
+      }
+
+      const {storyId, answers} = req.body;
+
+      // Validate required fields
+      if (!storyId || !answers) {
+        res.status(400).json({error: "Story ID and answers are required"});
+        return;
+      }
+
+      console.log("Updating story answers for:", storyId);
+
+      // Update Firestore document
+      const db = admin.firestore();
+      const storyRef = db.collection("customer-stories").doc(storyId);
+      
+      // Check if story exists
+      const storyDoc = await storyRef.get();
+      if (!storyDoc.exists) {
+        res.status(404).json({error: "Story not found"});
+        return;
+      }
+
+      // Update the story with answers
+      await storyRef.update({
+        questions: answers,
+        updatedAt: new Date().toISOString(),
+        status: "completed",
+      });
+
+      console.log("Story answers updated successfully");
+
+      res.status(200).json({
+        success: true,
+        message: "Story answers updated successfully",
+      });
+    } catch (error) {
+      console.error("Error updating story answers:", error);
+      res.status(500).json({error: "Internal Server Error"});
+    }
+  });
+});
+
+exports.getCustomerStories = onRequest((req, res) => {
+  cors(req, res, async () => {
+    if (req.method !== "GET") {
+      res.status(405).json({error: "Method Not Allowed"});
+      return;
+    }
+
+    try {
+      console.log("Fetching customer stories");
+
+      // Get all stories from Firestore
+      const db = admin.firestore();
+      const storiesSnapshot = await db.collection("customer-stories")
+        .orderBy("createdAt", "desc")
+        .limit(50) // Limit to 50 most recent stories
+        .get();
+
+      const stories = [];
+      storiesSnapshot.forEach((doc) => {
+        stories.push({
+          id: doc.id,
+          ...doc.data(),
+        });
+      });
+
+      console.log(`Found ${stories.length} customer stories`);
+
+      res.status(200).json({
+        success: true,
+        stories: stories,
+      });
+    } catch (error) {
+      console.error("Error fetching customer stories:", error);
+      res.status(500).json({error: "Internal Server Error"});
+    }
+  });
+});
