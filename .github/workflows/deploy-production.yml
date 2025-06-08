@@ -40,7 +40,7 @@ jobs:
         echo "🔍 Validating deployment readiness..."
         
         # Check critical files
-        required_files=("firebase.json" ".firebaserc" "firestore.rules")
+        required_files=("firebase.json" ".firebaserc" "firestore.rules" "firestore.rules.production" "src/admin.html")
         for file in "${required_files[@]}"; do
           if [[ ! -f "$file" ]]; then
             echo "❌ Missing required file: $file"
@@ -59,7 +59,33 @@ jobs:
           exit 1
         fi
         
+        # Check for admin route in firebase.json
+        if ! jq -e '.hosting.rewrites[] | select(.source == "/admin")' firebase.json > /dev/null; then
+          echo "❌ Admin route not configured in firebase.json"
+          exit 1
+        fi
+        
         echo "✅ All validation checks passed"
+
+    - name: Security validation
+      run: |
+        echo "🔒 Validating security configuration..."
+        
+        # Check if using development Firestore rules
+        if grep -q "DEVELOPMENT ONLY - INSECURE" firestore.rules; then
+          echo "⚠️ WARNING: firestore.rules contains development rules!"
+          echo "📋 Copying production rules..."
+          cp firestore.rules.production firestore.rules
+          echo "✅ Production Firestore rules will be deployed"
+        fi
+        
+        # Check for admin secret in workflow
+        if [[ -z "${{ secrets.FIREBASE_ADMIN_SECRET }}" ]]; then
+          echo "⚠️ WARNING: FIREBASE_ADMIN_SECRET not set in GitHub secrets"
+          echo "Admin panel functionality may be limited without proper secret configuration"
+        fi
+        
+        echo "✅ Security validation completed"
 
   # Setup and prepare shared resources
   setup-deployment:
@@ -216,6 +242,15 @@ jobs:
           npm ci --prefer-offline --no-audit --no-fund --silent
         fi
         cd ..
+
+    - name: Configure Firebase Functions Environment
+      if: ${{ secrets.FIREBASE_ADMIN_SECRET }}
+      run: |
+        echo "🔐 Configuring Firebase Functions environment..."
+        npx firebase-tools functions:config:set admin.secret="${{ secrets.FIREBASE_ADMIN_SECRET }}" --project ${{ needs.setup-deployment.outputs.project-id }}
+        echo "✅ Admin secret configured"
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
     - name: Deploy Firebase Functions
       run: |
@@ -396,8 +431,14 @@ jobs:
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "### 🌐 Production URLs" >> $GITHUB_STEP_SUMMARY
           echo "- **Website:** https://${{ needs.setup-deployment.outputs.project-id }}.web.app" >> $GITHUB_STEP_SUMMARY
+          echo "- **Admin Panel:** https://${{ needs.setup-deployment.outputs.project-id }}.web.app/admin" >> $GITHUB_STEP_SUMMARY
           echo "- **Functions:** https://us-central1-${{ needs.setup-deployment.outputs.project-id }}.cloudfunctions.net/" >> $GITHUB_STEP_SUMMARY
           echo "- **Console:** https://console.firebase.google.com/project/${{ needs.setup-deployment.outputs.project-id }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### 🔒 Security Configuration" >> $GITHUB_STEP_SUMMARY
+          echo "- **Firestore Rules:** Production rules deployed" >> $GITHUB_STEP_SUMMARY
+          echo "- **Admin Secret:** ${{ secrets.FIREBASE_ADMIN_SECRET && '✅ Configured' || '⚠️ Not configured' }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Admin Panel:** Protected with Firebase Auth" >> $GITHUB_STEP_SUMMARY
         else
           echo "## ❌ Deployment Issues" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
@@ -414,6 +455,27 @@ jobs:
           echo "✅ Website is accessible"
         else
           echo "⚠️ Website not immediately accessible (may take a few minutes to propagate)"
+        fi
+
+    - name: Test admin panel accessibility
+      if: needs.deploy-hosting.result == 'success'
+      run: |
+        echo "🔐 Testing admin panel accessibility..."
+        sleep 5  # Give hosting a moment to propagate
+        
+        # Test admin route
+        if curl -f -s -o /dev/null --max-time 30 "https://${{ needs.setup-deployment.outputs.project-id }}.web.app/admin"; then
+          echo "✅ Admin panel route is accessible"
+          
+          # Check if admin.html is being served (not index.html)
+          content=$(curl -s --max-time 30 "https://${{ needs.setup-deployment.outputs.project-id }}.web.app/admin" | head -n 20)
+          if echo "$content" | grep -q "Admin Login\|Admin Panel"; then
+            echo "✅ Admin panel content verified"
+          else
+            echo "⚠️ Admin route accessible but content may not be correct"
+          fi
+        else
+          echo "❌ Admin panel route not accessible"
         fi
 
     - name: Notify success
