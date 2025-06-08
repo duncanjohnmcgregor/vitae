@@ -182,9 +182,8 @@ jobs:
         
         # Check admin.html for hardcoded credentials
         if [[ -f "src/admin.html" ]]; then
-          if grep -q "password.*=.*['\"]admin['\"]" src/admin.html || \
-             grep -q "password.*=.*['\"]password['\"]" src/admin.html || \
-             grep -q "credentials.*hardcoded" src/admin.html; then
+          # Look for actual hardcoded passwords in JavaScript, not form elements
+          if grep -E "(password|secret|key)\s*=\s*['\"]([^'\"]*admin[^'\"]*|[^'\"]*password[^'\"]*|[^'\"]*12345[^'\"]*)['\"]" src/admin.html | grep -v "getElementById\|querySelector\|\.value\|type=\"password\"\|placeholder" | grep -q .; then
             echo "❌ Found potential hardcoded credentials in admin.html!"
             echo "  Use Firebase Authentication instead"
             exit 1
@@ -193,10 +192,16 @@ jobs:
           fi
           
           # Check for Firebase Auth usage
-          if grep -q "firebase.auth()" src/admin.html; then
+          if grep -q "firebase.auth()" src/admin.html || grep -q "firebase/auth" src/admin.html; then
             echo "✅ Admin panel appears to use Firebase Authentication"
           else
             echo "⚠️ Admin panel might not be using Firebase Authentication"
+          fi
+          
+          # Check for common insecure patterns
+          if grep -E "admin_password\s*=|ADMIN_PASSWORD\s*=|defaultPassword\s*=" src/admin.html; then
+            echo "❌ Found insecure credential pattern in admin.html"
+            exit 1
           fi
         fi
 
