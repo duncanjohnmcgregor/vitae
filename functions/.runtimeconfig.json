@@ -1,0 +1,5 @@
+{
+  "admin": {
+    "secret": "local-dev-secret-2024"
+  }
+} 
