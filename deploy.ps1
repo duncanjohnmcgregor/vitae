@@ -1,5 +1,6 @@
 # Vitae Website Deployment Script (PowerShell)
 # This script automates the deployment of the Vitae landing page using Terraform and Firebase
+# Supports both Windows and macOS platforms
 #
 # IMPORTANT: Production deployment via this script is for BREAK-GLASS/EMERGENCY use only!
 # 
@@ -20,7 +21,7 @@ param(
     [Parameter(Mandatory=$false)]
     [ValidateSet('local', 'prod')]
     [string]$Environment = 'local',
-    
+
     [Parameter(Mandatory=$false)]
     [string]$ProjectId,
     
@@ -49,10 +50,15 @@ param(
 # Set error action preference
 $ErrorActionPreference = "Stop"
 
+# Detect platform
+$IsRunningOnMacOS = $PSVersionTable.OS -match 'Darwin' -or $PSVersionTable.Platform -eq 'Unix'
+$IsRunningOnWindows = -not $IsRunningOnMacOS
+
 # Display usage information if help requested
 if ($PSBoundParameters.ContainsKey('?') -or $args -contains '-?' -or $args -contains '-help' -or $args -contains '--help') {
     Write-Host "`nVitae Deployment Script Usage:" -ForegroundColor Green
     Write-Host "==============================" -ForegroundColor Green
+    Write-Host "`nPlatform: This script supports both Windows and macOS" -ForegroundColor Cyan
     Write-Host "`nFor local development (recommended):" -ForegroundColor Yellow
     Write-Host "  ./deploy.ps1" -ForegroundColor White
     Write-Host "  ./deploy.ps1 local" -ForegroundColor White
@@ -72,6 +78,9 @@ if ($PSBoundParameters.ContainsKey('?') -or $args -contains '-?' -or $args -cont
     Write-Host "  -RunGitHubActions: Run GitHub Actions locally before deployment" -ForegroundColor White
     Write-Host "`nFor enhanced GitHub Actions integration, use:" -ForegroundColor Green
     Write-Host "  ./deploy-with-act.ps1" -ForegroundColor Cyan
+    Write-Host "`nNote for macOS users:" -ForegroundColor Yellow
+    Write-Host "  - Requires PowerShell Core (pwsh) installed via 'brew install powershell'" -ForegroundColor White
+    Write-Host "  - Terminal windows will open for emulators and HTTP server" -ForegroundColor White
     exit 0
 }
 
@@ -125,13 +134,57 @@ function Stop-FirebaseEmulators {
         # Ignore errors from firebase command
     }
     
-    # Kill Firebase-related processes
+    $killedAny = $false
+    
+    if ($IsRunningOnMacOS) {
+        # Mac-specific process killing
+        Write-Status "Stopping Firebase-related processes on macOS..."
+        
+        # Kill Firebase-related processes using pkill
+        $processPatterns = @(
+            "firebase",
+            "java.*emulator",
+            "node.*firebase",
+            "node.*functions-framework",
+            "node.*emulator"
+        )
+        
+        foreach ($pattern in $processPatterns) {
+            try {
+                $result = pkill -f $pattern 2>&1
+                if ($LASTEXITCODE -eq 0) {
+                    Write-Status "Stopped processes matching: $pattern"
+                    $killedAny = $true
+                }
+            }
+            catch {
+                # Process might not exist
+            }
+        }
+        
+        # Also check for specific ports being used
+        $emulatorPorts = @(4001, 5001, 8081, 9099)
+        foreach ($port in $emulatorPorts) {
+            try {
+                $processId = lsof -ti :$port 2>$null
+                if ($processId) {
+                    Write-Status "Killing process on port $port (PID: $processId)"
+                    kill -9 $processId 2>$null
+                    $killedAny = $true
+                }
+            }
+            catch {
+                # Port might not be in use
+            }
+        }
+    }
+    else {
+        # Windows-specific process killing (existing code)
     $processesToKill = @(
         "firebase",
         "java"  # Firestore emulator often runs on Java
     )
     
-    $killedAny = $false
     foreach ($processName in $processesToKill) {
         try {
             $processes = Get-Process -Name $processName -ErrorAction SilentlyContinue
@@ -173,6 +226,7 @@ function Stop-FirebaseEmulators {
         }
         catch {
             # Ignore if this fails too
+            }
         }
     }
     
@@ -325,9 +379,22 @@ function Deploy-FirebaseFunctions {
         
         Write-Status "Starting Firebase emulators in background..."
         
-        # Start emulators in a new PowerShell window
-        $emulatorCommand = "Write-Host 'Firebase Emulators Starting...' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the emulators.' -ForegroundColor Yellow; $firebaseCmd emulators:start"
-        Start-Process powershell -ArgumentList "-NoExit", "-Command", $emulatorCommand -WindowStyle Normal
+        if ($IsRunningOnMacOS) {
+            # Mac-specific: Start emulators in a new Terminal window
+            $emulatorCommand = "$firebaseCmd emulators:start"
+            Write-Status "Opening new Terminal window for Firebase emulators..."
+            
+            # Use osascript to open a new Terminal window and run the command
+            $terminalScript = @"
+tell application "Terminal" to do script "echo 'Firebase Emulators Starting...'; echo 'Press Ctrl+C in this window to stop the emulators.'; cd '$PWD'; $emulatorCommand"
+"@
+            osascript -e $terminalScript
+            
+        } else {
+            # Windows-specific: Start emulators in a new PowerShell window
+            $emulatorCommand = "Write-Host 'Firebase Emulators Starting...' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the emulators.' -ForegroundColor Yellow; $firebaseCmd emulators:start"
+            Start-Process powershell -ArgumentList "-NoExit", "-Command", $emulatorCommand -WindowStyle Normal
+        }
         
         # Wait a moment for emulators to start
         Write-Status "Waiting for emulators to initialize..."
@@ -522,8 +589,21 @@ function Start-LocalHttpServer {
     # Check if Python is available
     if (Test-Command 'python') {
         Write-Status "Starting Python HTTP server on port 3000..."
-        $serverCommand = "Write-Host 'Local HTTP Server Starting on http://localhost:3000' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the server.' -ForegroundColor Yellow; cd src; python -m http.server 3000"
-        Start-Process powershell -ArgumentList "-NoExit", "-Command", $serverCommand -WindowStyle Normal
+        
+        if ($IsRunningOnMacOS) {
+            # Mac-specific: Start server in a new Terminal window
+            Write-Status "Opening new Terminal window for HTTP server..."
+            $terminalScript = @"
+tell application "Terminal" to do script "echo 'Local HTTP Server Starting on http://localhost:3000'; echo 'Press Ctrl+C in this window to stop the server.'; cd '$PWD/src'; python -m http.server 3000"
+"@
+            osascript -e $terminalScript
+            
+        } else {
+            # Windows-specific
+            $serverCommand = "Write-Host 'Local HTTP Server Starting on http://localhost:3000' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the server.' -ForegroundColor Yellow; cd src; python -m http.server 3000"
+            Start-Process powershell -ArgumentList "-NoExit", "-Command", $serverCommand -WindowStyle Normal
+        }
+        
         Write-Success "Local HTTP server started in separate window"
     } elseif (Test-Command 'node') {
         # Fallback to Node.js http-server if available
@@ -537,8 +617,21 @@ function Start-LocalHttpServer {
             }
             
             Write-Status "Starting Node.js HTTP server on port 3000..."
-            $serverCommand = "Write-Host 'Local HTTP Server Starting on http://localhost:3000' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the server.' -ForegroundColor Yellow; cd src; npx http-server -p 3000"
-            Start-Process powershell -ArgumentList "-NoExit", "-Command", $serverCommand -WindowStyle Normal
+            
+            if ($IsRunningOnMacOS) {
+                # Mac-specific: Start server in a new Terminal window
+                Write-Status "Opening new Terminal window for Node.js HTTP server..."
+                $terminalScript = @"
+tell application "Terminal" to do script "echo 'Local HTTP Server Starting on http://localhost:3000'; echo 'Press Ctrl+C in this window to stop the server.'; cd '$PWD/src'; npx http-server -p 3000"
+"@
+                osascript -e $terminalScript
+                
+            } else {
+                # Windows-specific
+                $serverCommand = "Write-Host 'Local HTTP Server Starting on http://localhost:3000' -ForegroundColor Yellow; Write-Host 'Press Ctrl+C in this window to stop the server.' -ForegroundColor Yellow; cd src; npx http-server -p 3000"
+                Start-Process powershell -ArgumentList "-NoExit", "-Command", $serverCommand -WindowStyle Normal
+            }
+            
             Write-Success "Local HTTP server started in separate window"
         }
         catch {
@@ -558,16 +651,30 @@ function Invoke-GitHubActionsLocally {
     
     # Check if act is available
     try {
+        if ($IsRunningOnMacOS) {
+            # On Mac, act is typically installed via Homebrew or direct download
+            $actVersion = act --version 2>$null
+            if ($LASTEXITCODE -ne 0) {
+                throw "Act command failed"
+            }
+        } else {
+            # Windows-specific act path
         function act { & "$env:LOCALAPPDATA\Microsoft\WinGet\Packages\nektos.act_Microsoft.Winget.Source_8wekyb3d8bbwe\act.exe" @args }
         $actVersion = act --version 2>$null
         if ($LASTEXITCODE -ne 0) {
             throw "Act command failed"
+            }
         }
         Write-Status "Using act: $actVersion"
     }
     catch {
         Write-Warning "Act is not installed or not working properly."
+        if ($IsRunningOnMacOS) {
+            Write-Host "Install act with: brew install act" -ForegroundColor Yellow
+            Write-Host "Or download from: https://github.com/nektos/act/releases" -ForegroundColor Yellow
+        } else {
         Write-Host "Install act with: winget install nektos.act" -ForegroundColor Yellow
+        }
         Write-Host "Or use the enhanced script: ./deploy-with-act.ps1" -ForegroundColor Cyan
         return $false
     }
@@ -581,7 +688,11 @@ function Invoke-GitHubActionsLocally {
     }
     catch {
         Write-Warning "Docker is not running. Act requires Docker to run GitHub Actions locally."
+        if ($IsRunningOnMacOS) {
+            Write-Host "Please start Docker Desktop for Mac and try again." -ForegroundColor Yellow
+        } else {
         Write-Host "Please start Docker Desktop and try again." -ForegroundColor Yellow
+        }
         return $false
     }
     
@@ -667,6 +778,7 @@ if ($Environment -eq 'prod') {
     $logEntry | Add-Content -Path "emergency-deployments.log" -Encoding UTF8
     Write-Host "`nEmergency deployment logged to emergency-deployments.log" -ForegroundColor Yellow
     Write-Host "=================================================" -ForegroundColor Green
+    
     # Get project ID from terraform config if not provided
     if (-not $ProjectId) {
         $terraformProjectId = Get-TerraformProjectId
@@ -755,8 +867,13 @@ Write-Host "=================================================" -ForegroundColor 
 if ($Environment -eq 'local') {
     Write-Success "Local development environment is ready!"
     Write-Host "`nLocal servers are running in separate windows:" -ForegroundColor Yellow
-    Write-Host "- Local HTTP Server (website files)" -ForegroundColor Yellow
-    Write-Host "- Firebase Emulators" -ForegroundColor Yellow
+    if ($IsRunningOnMacOS) {
+        Write-Host "- Local HTTP Server (in Terminal window)" -ForegroundColor Yellow
+        Write-Host "- Firebase Emulators (in Terminal window)" -ForegroundColor Yellow
+    } else {
+        Write-Host "- Local HTTP Server (in PowerShell window)" -ForegroundColor Yellow
+        Write-Host "- Firebase Emulators (in PowerShell window)" -ForegroundColor Yellow
+    }
     if (-not $SkipEmulatorCleanup) {
         Write-Host "Note: Any existing emulator processes were stopped before starting new ones" -ForegroundColor Yellow
     } else {
@@ -773,7 +890,11 @@ if ($Environment -eq 'local') {
     Write-Host "2. Open http://localhost:4001 for Firebase UI" -ForegroundColor White
     Write-Host "3. All navigation links will work locally with .html extensions" -ForegroundColor White
     Write-Host "4. Forms will submit to local Firebase Functions" -ForegroundColor White
-    Write-Host "5. Close both server windows or press Ctrl+C to stop" -ForegroundColor White
+    if ($IsRunningOnMacOS) {
+        Write-Host "5. Close Terminal windows or press Ctrl+C to stop servers" -ForegroundColor White
+    } else {
+        Write-Host "5. Close PowerShell windows or press Ctrl+C to stop servers" -ForegroundColor White
+    }
 } else {
     Write-Success "Production deployment completed successfully!"
     Write-Host "Project ID: $ProjectId" -ForegroundColor Cyan

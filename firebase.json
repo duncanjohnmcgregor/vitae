@@ -20,6 +20,10 @@
         "destination": "/start-your-story.html"
       },
       {
+        "source": "/admin",
+        "destination": "/admin.html"
+      },
+      {
         "source": "**",
         "destination": "/index.html"
       }
@@ -49,6 +53,9 @@
     "rules": "firestore.rules"
   },
   "emulators": {
+    "auth": {
+      "port": 9099
+    },
     "functions": {
       "port": 5001
     },

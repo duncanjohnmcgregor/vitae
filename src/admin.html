@@ -1,0 +1,704 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vitae Admin Panel</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        /* Admin-specific styles */
+        .admin-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .login-form {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .login-form h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: var(--text-primary);
+        }
+
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+        }
+
+        .admin-header h1 {
+            color: var(--text-primary);
+            font-size: 2rem;
+        }
+
+        .logout-btn {
+            padding: 10px 20px;
+            background: var(--error);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+        }
+
+        .admin-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .action-card {
+            padding: 30px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            box-shadow: var(--shadow);
+            text-align: center;
+            transition: transform 0.3s;
+        }
+
+        .action-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .action-card h3 {
+            color: var(--text-primary);
+            margin-bottom: 15px;
+        }
+
+        .action-card p {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+
+        .stories-list {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: var(--shadow);
+        }
+
+        .story-item {
+            padding: 20px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: background 0.3s;
+        }
+
+        .story-item:hover {
+            background: var(--surface);
+        }
+
+        .story-info h4 {
+            color: var(--text-primary);
+            margin-bottom: 5px;
+        }
+
+        .story-info p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .story-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .story-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .story-modal-content {
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 40px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .question-form {
+            margin-top: 30px;
+            padding: 20px;
+            background: var(--surface);
+            border-radius: 10px;
+        }
+
+        .question-form h3 {
+            color: var(--text-primary);
+            margin-bottom: 20px;
+        }
+
+        .question-item {
+            padding: 15px;
+            background: white;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border: 1px solid var(--border);
+        }
+
+        .question-item h4 {
+            color: var(--primary);
+            margin-bottom: 10px;
+        }
+
+        .answer-input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-top: 10px;
+            font-family: inherit;
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        .success-message {
+            padding: 15px;
+            background: #4ade80;
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .error-message {
+            padding: 15px;
+            background: var(--error);
+            color: white;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 50px;
+            color: var(--text-secondary);
+        }
+
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .auth-loading {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+
+        .auth-loading-content {
+            text-align: center;
+        }
+
+        .spinner {
+            border: 3px solid var(--border);
+            border-radius: 50%;
+            border-top: 3px solid var(--primary);
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Auth Loading State -->
+    <div id="authLoading" class="auth-loading">
+        <div class="auth-loading-content">
+            <div class="spinner"></div>
+            <p>Checking authentication...</p>
+            <p style="margin-top: 20px; font-size: 0.9rem; color: var(--text-secondary);">
+                Taking too long? <a href="#" onclick="document.getElementById('authLoading').style.display='none'; return false;" style="color: var(--primary);">Click here to continue</a>
+            </p>
+        </div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="loginSection" class="admin-container hidden">
+        <form id="loginForm" class="login-form">
+            <h2>Admin Login</h2>
+            <p style="text-align: center; color: var(--text-secondary); margin-bottom: 20px;">
+                Sign in with your authorized email
+            </p>
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" required placeholder="admin@example.com">
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" required placeholder="Enter your password">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+            <div id="loginError" class="error-message hidden" style="margin-top: 15px;"></div>
+        </form>
+    </div>
+
+    <!-- Admin Panel -->
+    <div id="adminPanel" class="admin-container hidden">
+        <div class="admin-header">
+            <h1>Vitae Admin Panel</h1>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <div class="user-info">
+                    <span>Signed in as:</span>
+                    <strong id="userEmail"></strong>
+                </div>
+                <button class="logout-btn" onclick="logout()">Sign Out</button>
+            </div>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <div class="admin-actions">
+            <div class="action-card">
+                <h3>📝 New Customer Story</h3>
+                <p>Start a new customer story collection process</p>
+                <button class="btn btn-primary" onclick="startNewStory()">Start New Story</button>
+            </div>
+            <div class="action-card">
+                <h3>📊 View Stories</h3>
+                <p>View and manage existing customer stories</p>
+                <button class="btn btn-secondary" onclick="viewStories()">View All Stories</button>
+            </div>
+        </div>
+
+        <div id="storiesList" class="stories-list hidden">
+            <h2>Customer Stories</h2>
+            <div id="storiesContainer"></div>
+        </div>
+    </div>
+
+    <!-- Story Modal -->
+    <div id="storyModal" class="story-modal">
+        <div class="story-modal-content">
+            <h2 id="storyTitle">New Customer Story</h2>
+            <button class="btn btn-secondary" style="float: right;" onclick="closeStoryModal()">Close</button>
+            <div style="clear: both;"></div>
+
+            <div id="storyForm" class="question-form">
+                <h3>Customer Information</h3>
+                <div class="form-group">
+                    <label for="customerName">Customer Name</label>
+                    <input type="text" id="customerName" required>
+                </div>
+                <div class="form-group">
+                    <label for="customerEmail">Customer Email</label>
+                    <input type="email" id="customerEmail" required>
+                </div>
+                <button class="btn btn-primary" onclick="createStory()">Create Story</button>
+            </div>
+
+            <div id="questionsSection" class="hidden">
+                <h3>Story Questions</h3>
+                <div id="questionsContainer"></div>
+                <button class="btn btn-primary" onclick="addQuestion()">Add Question</button>
+                <button class="btn btn-secondary" onclick="saveStory()">Save All Answers</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        // Import Firebase modules
+        import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js';
+        import { 
+            getAuth, 
+            signInWithEmailAndPassword,
+            onAuthStateChanged,
+            signOut,
+            connectAuthEmulator
+        } from 'https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js';
+
+        // Firebase configuration
+        // TODO: Replace this with fresh configuration from Firebase Console
+        // Go to: https://console.firebase.google.com/project/vitae-460717/settings/general
+        // Scroll to "Your apps" > Web apps > Config
+        const firebaseConfig = {
+            apiKey: "AIzaSyD9x84q4M-P5uoUlQtOVoU86cZ5N-H9hBo", // Replace with fresh API key
+            authDomain: "vitae-460717.firebaseapp.com",
+            projectId: "vitae-460717",
+            storageBucket: "vitae-460717.firebasestorage.app",
+            messagingSenderId: "740222930270",
+            appId: "1:740222930270:web:6c02a7a7f01a09b2e5c5e0" // Replace with fresh app ID
+        };
+
+        // Initialize Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+
+        // Connect to emulators if running locally
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+            try {
+                connectAuthEmulator(auth, 'http://localhost:9099', { disableWarnings: true });
+                console.log('Connected to Auth emulator');
+            } catch (error) {
+                // Already connected, ignore
+                console.log('Auth emulator already connected or error:', error.message);
+            }
+        }
+
+        // Make auth available globally
+        window.firebaseAuth = auth;
+
+        // Timeout failsafe - if auth doesn't respond in 5 seconds, show login
+        setTimeout(() => {
+            const loadingElement = document.getElementById('authLoading');
+            if (loadingElement && !loadingElement.classList.contains('hidden')) {
+                console.error('Auth initialization timeout - showing login form');
+                loadingElement.classList.add('hidden');
+                loadingElement.style.display = 'none';
+                showLoginForm();
+            }
+        }, 5000);
+
+        // Placeholder questions
+        const PLACEHOLDER_QUESTIONS = [
+            "What is your earliest childhood memory?",
+            "Who was the most influential person in your life?",
+            "What was your greatest achievement?",
+            "What advice would you give to your younger self?",
+            "What tradition or value do you hope to pass on to future generations?"
+        ];
+
+        let currentStoryId = null;
+        let currentUser = null;
+        let userToken = null;
+
+        // Auth state observer
+        onAuthStateChanged(auth, async (user) => {
+            console.log('Auth state changed, user:', user ? user.email : 'null');
+            const authLoading = document.getElementById('authLoading');
+            if (authLoading) {
+                authLoading.classList.add('hidden');
+                authLoading.style.display = 'none';
+                console.log('Auth loading hidden in auth state observer');
+            }
+            
+            if (user) {
+                currentUser = user;
+                console.log('User authenticated:', user.email);
+                
+                // Get the ID token
+                try {
+                    userToken = await user.getIdToken();
+                    const idTokenResult = await user.getIdTokenResult();
+                    console.log('Token retrieved, checking admin claim...');
+                    
+                    // Check if user has admin claim
+                    if (idTokenResult.claims.admin) {
+                        console.log('User has admin claim, showing admin panel');
+                        showAdminPanel();
+                        document.getElementById('userEmail').textContent = user.email;
+                    } else {
+                        // User is not an admin
+                        console.log('User does not have admin claim');
+                        showMessage('Access denied. You are not authorized to access the admin panel.', 'error');
+                        await signOut(auth);
+                        showLoginForm();
+                    }
+                } catch (error) {
+                    console.error('Error getting user token:', error);
+                    showLoginForm();
+                }
+            } else {
+                console.log('No user authenticated, showing login form');
+                showLoginForm();
+            }
+        }, (error) => {
+            console.error('Auth state observer error:', error);
+            const authLoading = document.getElementById('authLoading');
+            if (authLoading) {
+                authLoading.classList.add('hidden');
+                authLoading.style.display = 'none';
+            }
+            showLoginForm();
+        });
+
+        function showLoginForm() {
+            console.log('showLoginForm called');
+            document.getElementById('loginSection').classList.remove('hidden');
+            document.getElementById('adminPanel').classList.add('hidden');
+            const authLoading = document.getElementById('authLoading');
+            if (authLoading) {
+                authLoading.classList.add('hidden');
+                authLoading.style.display = 'none';
+                console.log('Auth loading hidden via showLoginForm');
+            }
+        }
+
+        function showAdminPanel() {
+            console.log('showAdminPanel called');
+            document.getElementById('loginSection').classList.add('hidden');
+            document.getElementById('adminPanel').classList.remove('hidden');
+            const authLoading = document.getElementById('authLoading');
+            if (authLoading) {
+                authLoading.classList.add('hidden');
+                authLoading.style.display = 'none';
+                console.log('Auth loading hidden via showAdminPanel');
+            }
+        }
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('loginError');
+            
+            try {
+                errorDiv.classList.add('hidden');
+                const userCredential = await signInWithEmailAndPassword(auth, email, password);
+                // Auth state observer will handle the rest
+            } catch (error) {
+                console.error('Login error:', error);
+                errorDiv.textContent = error.message;
+                errorDiv.classList.remove('hidden');
+            }
+        });
+
+        // Make functions available globally
+        window.logout = async function() {
+            try {
+                await signOut(auth);
+                window.location.reload();
+            } catch (error) {
+                console.error('Error signing out:', error);
+            }
+        };
+
+        window.showMessage = function(message, type = 'success') {
+            const container = document.getElementById('messageContainer');
+            container.innerHTML = `<div class="${type}-message">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 3000);
+        };
+
+        window.startNewStory = function() {
+            document.getElementById('storyModal').style.display = 'block';
+            document.getElementById('storyForm').classList.remove('hidden');
+            document.getElementById('questionsSection').classList.add('hidden');
+            document.getElementById('storyTitle').textContent = 'New Customer Story';
+            currentStoryId = null;
+        };
+
+        window.closeStoryModal = function() {
+            document.getElementById('storyModal').style.display = 'none';
+            document.getElementById('customerName').value = '';
+            document.getElementById('customerEmail').value = '';
+        };
+
+        window.createStory = async function() {
+            const name = document.getElementById('customerName').value;
+            const email = document.getElementById('customerEmail').value;
+
+            if (!name || !email) {
+                showMessage('Please fill in all fields', 'error');
+                return;
+            }
+
+            try {
+                const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? 'http://127.0.0.1:5001/vitae-local/us-central1/createCustomerStory' 
+                    : 'https://us-central1-vitae-460717.cloudfunctions.net/createCustomerStory';
+
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${userToken}`
+                    },
+                    body: JSON.stringify({
+                        name,
+                        email,
+                        questions: PLACEHOLDER_QUESTIONS.map((q, index) => ({
+                            id: `q${index + 1}`,
+                            question: q,
+                            answer: ''
+                        }))
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                currentStoryId = data.storyId;
+                showMessage('Story created successfully!');
+                document.getElementById('storyForm').classList.add('hidden');
+                document.getElementById('questionsSection').classList.remove('hidden');
+                displayQuestions();
+            } catch (error) {
+                console.error('Error creating story:', error);
+                showMessage('Error creating story: ' + error.message, 'error');
+            }
+        };
+
+        window.displayQuestions = function() {
+            const container = document.getElementById('questionsContainer');
+            container.innerHTML = '';
+
+            PLACEHOLDER_QUESTIONS.forEach((question, index) => {
+                const questionDiv = document.createElement('div');
+                questionDiv.className = 'question-item';
+                questionDiv.innerHTML = `
+                    <h4>Question ${index + 1}</h4>
+                    <p>${question}</p>
+                    <textarea class="answer-input" id="answer-${index}" placeholder="Enter customer's answer here..."></textarea>
+                `;
+                container.appendChild(questionDiv);
+            });
+        };
+
+        window.addQuestion = function() {
+            const newQuestion = prompt('Enter a new question:');
+            if (newQuestion) {
+                PLACEHOLDER_QUESTIONS.push(newQuestion);
+                displayQuestions();
+            }
+        };
+
+        window.saveStory = async function() {
+            const answers = [];
+            PLACEHOLDER_QUESTIONS.forEach((question, index) => {
+                const answer = document.getElementById(`answer-${index}`).value;
+                answers.push({
+                    id: `q${index + 1}`,
+                    question: question,
+                    answer: answer
+                });
+            });
+
+            try {
+                const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? 'http://127.0.0.1:5001/vitae-local/us-central1/updateStoryAnswers' 
+                    : 'https://us-central1-vitae-460717.cloudfunctions.net/updateStoryAnswers';
+
+                const response = await fetch(functionUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${userToken}`
+                    },
+                    body: JSON.stringify({
+                        storyId: currentStoryId,
+                        answers
+                    })
+                });
+
+                const data = await response.json();
+                if (data.error) throw new Error(data.error);
+
+                showMessage('Story saved successfully!');
+                closeStoryModal();
+                viewStories();
+            } catch (error) {
+                console.error('Error saving story:', error);
+                showMessage('Error saving story: ' + error.message, 'error');
+            }
+        };
+
+        window.viewStories = async function() {
+            document.getElementById('storiesList').classList.remove('hidden');
+            const container = document.getElementById('storiesContainer');
+            container.innerHTML = '<p>Loading stories...</p>';
+
+            try {
+                const functionUrl = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+                    ? 'http://127.0.0.1:5001/vitae-local/us-central1/getCustomerStories' 
+                    : 'https://us-central1-vitae-460717.cloudfunctions.net/getCustomerStories';
+
+                const response = await fetch(functionUrl, {
+                    headers: {
+                        'Authorization': `Bearer ${userToken}`
+                    }
+                });
+                const data = await response.json();
+
+                if (data.error) throw new Error(data.error);
+
+                if (data.stories && data.stories.length > 0) {
+                    container.innerHTML = '';
+                    data.stories.forEach(story => {
+                        const storyDiv = document.createElement('div');
+                        storyDiv.className = 'story-item';
+                        storyDiv.innerHTML = `
+                            <div class="story-info">
+                                <h4>${story.name}</h4>
+                                <p>${story.email} • Created: ${new Date(story.createdAt).toLocaleDateString()}</p>
+                            </div>
+                            <div class="story-actions">
+                                <button class="btn btn-secondary" onclick="viewStoryDetails('${story.id}')">View Details</button>
+                            </div>
+                        `;
+                        container.appendChild(storyDiv);
+                    });
+                } else {
+                    container.innerHTML = '<p>No stories found. Create your first story!</p>';
+                }
+            } catch (error) {
+                console.error('Error loading stories:', error);
+                container.innerHTML = '<p>Error loading stories. Please try again.</p>';
+            }
+        };
+
+        window.viewStoryDetails = async function(storyId) {
+            // Implementation for viewing story details
+            alert('Story details view coming soon!');
+        };
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('storyModal');
+            if (event.target === modal) {
+                closeStoryModal();
+            }
+        };
+    </script>
+</body>
+</html>

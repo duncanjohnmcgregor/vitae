@@ -1,0 +1,40 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Helper function to check if user is admin
+    function isAdmin() {
+      return request.auth != null && 
+             request.auth.token.admin == true;
+    }
+    
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    // Waitlist collection - public write for email submissions, no read access
+    match /waitlist/{document=**} {
+      allow read: if isAdmin();  // Only admins can read waitlist
+      allow create: if true;     // Anyone can join waitlist
+      allow update, delete: if isAdmin(); // Only admins can modify
+    }
+    
+    // Start story submissions - public write for form submissions, admin read
+    match /start-story-submissions/{document=**} {
+      allow read: if isAdmin();  // Only admins can read submissions
+      allow create: if true;     // Anyone can submit a form
+      allow update, delete: if isAdmin(); // Only admins can modify
+    }
+    
+    // Customer stories - admin only access
+    match /customer-stories/{document=**} {
+      allow read, write: if isAdmin(); // Full access for admins only
+    }
+    
+    // Admin users collection (for managing admin access)
+    match /admin-users/{userId} {
+      allow read: if isAuthenticated() && request.auth.uid == userId;
+      allow write: if isAdmin();
+    }
+  }
+} 

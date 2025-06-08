@@ -92,3 +92,11 @@ github-actions-key.json
 
 # Emergency deployment logs (for audit trail but not committed)
 emergency-deployments.log
+
+# Firebase emulator logs
+firestore-debug.log
+
+# Firebase local runtime config
+functions/.runtimeconfig.json
+
+# Firebase emulator data
