@@ -180,11 +180,24 @@ jobs:
       run: |
         echo "🔧 Configuring Firebase project..."
         # Use service account authentication
-        npx firebase-tools use prod --project ${{ env.PROJECT_ID }}
+        npx firebase-tools use prod --project ${{ steps.set-project.outputs.project-id }}
         npx firebase-tools projects:list
-        echo "✅ Firebase project configured for ${{ env.PROJECT_ID }}"
+        echo "✅ Firebase project configured for ${{ steps.set-project.outputs.project-id }}"
       env:
         GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+
+    - name: Configure Firebase Functions Environment
+      run: |
+        if [ -n "$FIREBASE_ADMIN_SECRET" ]; then
+          echo "🔐 Configuring Firebase Functions environment..."
+          npx firebase-tools functions:config:set admin.secret="$FIREBASE_ADMIN_SECRET" --project ${{ needs.setup-deployment.outputs.project-id }}
+          echo "✅ Admin secret configured"
+        else
+          echo "⚠️ FIREBASE_ADMIN_SECRET not set, skipping admin secret configuration"
+        fi
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
+        FIREBASE_ADMIN_SECRET: ${{ secrets.FIREBASE_ADMIN_SECRET }}
 
   # Parallel deployment jobs
   deploy-functions:
