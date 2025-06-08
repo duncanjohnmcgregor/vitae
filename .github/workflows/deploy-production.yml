@@ -21,7 +21,6 @@ on:
 
 env:
   NODE_VERSION: '18'
-  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
 
 jobs:
   # Pre-deployment validation (fast parallel checks)
@@ -67,13 +66,18 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 8
     outputs:
-      project-id: ${{ env.PROJECT_ID }}
+      project-id: ${{ steps.set-project.outputs.project-id }}
       cache-key: ${{ steps.cache-key.outputs.key }}
       firebase-cache-key: ${{ steps.firebase-cache-key.outputs.key }}
       
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
+
+    - name: Set project ID
+      id: set-project
+      run: |
+        echo "project-id=${{ secrets.GCP_PROJECT_ID }}" >> $GITHUB_OUTPUT
 
     - name: Generate cache keys
       id: cache-key
@@ -216,6 +220,15 @@ jobs:
           npm ci --prefer-offline --no-audit --no-fund --silent
         fi
         cd ..
+
+    - name: Configure Firebase Functions Environment
+      if: ${{ secrets.FIREBASE_ADMIN_SECRET != '' }}
+      run: |
+        echo "🔐 Configuring Firebase Functions environment..."
+        npx firebase-tools functions:config:set admin.secret="${{ secrets.FIREBASE_ADMIN_SECRET }}" --project ${{ needs.setup-deployment.outputs.project-id }}
+        echo "✅ Admin secret configured"
+      env:
+        GOOGLE_APPLICATION_CREDENTIALS: ${{ steps.auth.outputs.credentials_file_path }}
 
     - name: Deploy Firebase Functions
       run: |
